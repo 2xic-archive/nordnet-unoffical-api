@@ -1,0 +1,46 @@
+{
+  "name": "nordnet-unofficial-api",
+  "version": "0.1.0",
+  "description": "Unofficial for nordnet.no",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "/dist"
+  ],
+  "jest": {
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "<rootDir>/src/"
+    ]
+  },
+  "scripts": {
+    "test": "npm run build && jest",
+    "build": "tsc",
+    "lint": "eslint src --resolve-plugins-relative-to . --fix"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/2xic/nordnet-unoffical-api.git"
+  },
+  "author": "2xic",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/2xic/nordnet-unoffical-api/issues"
+  },
+  "homepage": "https://github.com/2xic/nordnet-unoffical-api#readme",
+  "dependencies": {
+    "@babel/preset-typescript": "^7.16.7",
+    "bignumber.js": "^9.0.2",
+    "dayjs": "^1.10.7",
+    "inversify": "^6.0.1",
+    "jest": "^27.5.1",
+    "typescript": "^4.5.5"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.12.1",
+    "@typescript-eslint/parser": "^5.12.1",
+    "eslint": "^8.9.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "prettier-eslint": "^13.0.0"
+  }
+}
