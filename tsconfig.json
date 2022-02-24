@@ -12,6 +12,7 @@
 
     "types": ["reflect-metadata", "jest"],
     "moduleResolution": "node",
-    "emitDecoratorMetadata": true
+    "emitDecoratorMetadata": true,
+    "declaration": true,
   }
 }
