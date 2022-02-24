@@ -16,7 +16,8 @@
   "scripts": {
     "test": "npm run build && jest",
     "build": "tsc",
-    "lint": "eslint src --resolve-plugins-relative-to . --fix"
+    "lint": "eslint src --resolve-plugins-relative-to . --fix",
+    "prepare": "npm run build"
   },
   "repository": {
     "type": "git",
