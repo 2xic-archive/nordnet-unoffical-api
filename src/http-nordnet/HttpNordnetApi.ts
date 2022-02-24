@@ -9,7 +9,7 @@ import {
   NordnetApi,
   NordnetOrderOptions,
   SimpleEquityResponse,
-} from "./Nordnet";
+} from "./NordnetApi";
 
 @injectable()
 export class HttpNordnetApi implements NordnetApi {

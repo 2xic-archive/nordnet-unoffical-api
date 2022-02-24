@@ -19,7 +19,7 @@ import {
   NordnetMarketId,
   NordnetOrderOptions,
   SimpleEquityResponse,
-} from "./http-nordnet/Nordnet";
+} from "./http-nordnet/NordnetApi";
 
 @injectable()
 export class NordnetBroker implements Broker {

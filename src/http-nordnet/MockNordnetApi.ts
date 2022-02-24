@@ -1,6 +1,6 @@
 import { injectable } from "inversify";
 import { Balance } from "../Broker";
-import { NordnetApi, NordnetMarketId, SimpleEquityResponse } from "./Nordnet";
+import { NordnetApi, NordnetMarketId, SimpleEquityResponse } from "./NordnetApi";
 
 @injectable()
 export class MockNordnetApi implements NordnetApi {

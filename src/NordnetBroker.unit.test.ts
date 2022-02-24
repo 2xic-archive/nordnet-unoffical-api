@@ -2,8 +2,8 @@ import BigNumber from "bignumber.js";
 import { Container } from "inversify";
 import { NordnetBroker } from ".";
 import { TooLowBalance } from "./errors/TooLowBalance";
-import { MockNordnetApi } from "./http-nordnet/MockNordnet";
-import { NordnetApi } from "./http-nordnet/Nordnet";
+import { MockNordnetApi } from "./http-nordnet/MockNordnetApi";
+import { NordnetApi } from "./http-nordnet/NordnetApi";
 
 describe("NordnetBroker", () => {
   let container: Container;
