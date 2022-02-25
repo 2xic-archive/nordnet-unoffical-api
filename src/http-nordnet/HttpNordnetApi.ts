@@ -1,15 +1,17 @@
-import BigNumber from "bignumber.js";
-import fetchSession, { SessionReturn } from "fetch-session";
-import { injectable } from "inversify";
-import { Balance } from "../Broker";
+import BigNumber from 'bignumber.js';
+import dayjs from 'dayjs';
+import fetchSession, { SessionReturn } from 'fetch-session';
+import { injectable } from 'inversify';
+import { Balance } from '../Broker';
 
-import { HttpAuthenticate } from "./HttpAuthenticate";
-import { HttpHeaderConstructor } from "./HttpHeaderConstructor";
+import { HttpAuthenticate } from './HttpAuthenticate';
+import { HttpHeaderConstructor } from './HttpHeaderConstructor';
 import {
   NordnetApi,
   NordnetOrderOptions,
+  SimpleDividensResponse,
   SimpleEquityResponse,
-} from "./NordnetApi";
+} from './NordnetApi';
 
 @injectable()
 export class HttpNordnetApi implements NordnetApi {
@@ -30,15 +32,15 @@ export class HttpNordnetApi implements NordnetApi {
     });
 
     const request = await this.fetchSession.fetch(
-      "https://www.nordnet.no/api/2/batch",
+      'https://www.nordnet.no/api/2/batch',
       {
-        method: "post",
+        method: 'post',
         headers: this.httpHeaderConstructor.getHeaders({
           headers: {
             ntag,
-            Accept: "application/json",
-            "content-type": "application/json",
-            "client-id": "NEXT",
+            Accept: 'application/json',
+            'content-type': 'application/json',
+            'client-id': 'NEXT',
           },
         }),
         body: JSON.stringify({
@@ -47,7 +49,7 @@ export class HttpNordnetApi implements NordnetApi {
       }
     );
     if (!request) {
-      throw new Error("Empty response");
+      throw new Error('Empty response');
     }
 
     return request.body as T;
@@ -64,18 +66,18 @@ export class HttpNordnetApi implements NordnetApi {
     accountId,
   }: NordnetOrderOptions): Promise<boolean> {
     const payload: Record<string, string> = {
-      order_type: "LIMIT",
+      order_type: 'LIMIT',
       price: price.toString(),
       currency: currency,
       identifier,
       market_id: marketId,
       side: side,
       volume: volume.toString(),
-      valid_until: validUntil.format("YYYY-MM-DD"),
+      valid_until: validUntil.format('YYYY-MM-DD'),
     };
     const payloadStr = Object.entries(payload)
       .map((item) => `${item[0]}=${item[1]}`)
-      .join("&");
+      .join('&');
 
     const ntag = await this.httpAuthentication.getAuth({
       fetchSession: this.fetchSession,
@@ -84,13 +86,13 @@ export class HttpNordnetApi implements NordnetApi {
     const response = await this.fetchSession.fetch(
       `https://www.nordnet.no/api/2/accounts/${accountId}/orders`,
       {
-        method: "post",
+        method: 'post',
         headers: this.httpHeaderConstructor.getHeaders({
           headers: {
-            "content-type": "application/x-www-form-urlencoded",
+            'content-type': 'application/x-www-form-urlencoded',
             ntag: ntag,
-            "client-id": "NEXT",
-            Accept: "application/json",
+            'client-id': 'NEXT',
+            Accept: 'application/json',
           },
         }),
         body: payloadStr,
@@ -98,7 +100,7 @@ export class HttpNordnetApi implements NordnetApi {
     );
 
     if (!response) {
-      throw new Error("Empty response");
+      throw new Error('Empty response');
     }
 
     return !!response.body;
@@ -118,25 +120,25 @@ export class HttpNordnetApi implements NordnetApi {
         headers: this.httpHeaderConstructor.getHeaders({
           headers: {
             ntag: ntag,
-            "client-id": "NEXT",
-            Accept: "application/json",
+            'client-id': 'NEXT',
+            Accept: 'application/json',
           },
         }),
       }
     );
     if (!response) {
-      throw new Error("Missing response");
+      throw new Error('Missing response');
     }
 
     const instruments: Array<{
-      asset_class: "EQY" | undefined;
+      asset_class: 'EQY' | undefined;
       tradables: Array<{
         identifier: string;
         market_id: string;
       }>;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     }> = response.body as any;
-    const item = instruments.find((item) => item.asset_class === "EQY")
+    const item = instruments.find((item) => item.asset_class === 'EQY')
       ?.tradables[0];
     if (item) {
       return {
@@ -166,7 +168,7 @@ export class HttpNordnetApi implements NordnetApi {
     >([
       {
         relative_url: `accounts/${accountId}/info`,
-        method: "GET",
+        method: 'GET',
       },
     ]);
 
@@ -191,27 +193,27 @@ export class HttpNordnetApi implements NordnetApi {
     });
     const response = await this.fetchSession.fetch(
       `https://www.nordnet.no/api/2/main_search?query=${
-        query.split(".")[0]
+        query.split('.')[0]
       }&search_space=ALL&limit=5`,
       {
         headers: this.httpHeaderConstructor.getHeaders({
           headers: {
-            "content-type": "application/x-www-form-urlencoded",
+            'content-type': 'application/x-www-form-urlencoded',
             ntag: ntag,
-            "client-id": "NEXT",
-            Accept: "application/json",
+            'client-id': 'NEXT',
+            Accept: 'application/json',
           },
         }),
       }
     );
     if (!response) {
-      throw new Error("Missing response");
+      throw new Error('Missing response');
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const body: SearchResponse = response.body as any;
 
     const market = body
-      .find((item) => item.display_group_type === "EQUITY")
+      .find((item) => item.display_group_type === 'EQUITY')
       ?.results.find(
         (item) =>
           item.display_symbol.startsWith(query) &&
@@ -219,13 +221,65 @@ export class HttpNordnetApi implements NordnetApi {
       );
 
     if (!market) {
-      throw new Error("Missing market");
+      throw new Error('Missing market');
     }
 
     return {
       lastPrice: new BigNumber(market.last_price.price),
       instrumentId: market.instrument_id,
     };
+  }
+
+  public async getDividensReport(options?: {
+    historical: boolean;
+  }): Promise<SimpleDividensResponse[]> {
+    const data = await this.sendBatchRequest<
+      [
+        {
+          code: number;
+          body: Array<{
+            event_type: string;
+            event_date: string;
+            dividend: {
+              paid_per_share: number;
+              currency: string;
+            };
+            instrument: {
+              current: string;
+              name: string;
+              symbol: string;
+            };
+            paid_total: number;
+          }>;
+        }
+      ]
+    >([
+      {
+        relative_url: `company_data/positionsevents/dividend?history=${
+          options?.historical ? 'true' : 'false'
+        }`,
+        method: 'GET',
+      },
+    ]);
+
+    //        [{"relative_url":"company_data/positionsevents/calendar?history=true","method":"GET"},{"relative_url":"company_data/positionsevents/dividend?history=true","method":"GET"}]
+
+    const dividensItems = data[0].body.filter((item) => {
+      const dividensType = ['dividend.CASH', 'dividend.SPECIAL_CASH'];
+      return dividensType.includes(item.event_type);
+    });
+
+    const items = dividensItems.map((rawItem): SimpleDividensResponse => {
+      const item: SimpleDividensResponse = {
+        instrument: rawItem.instrument.name,
+        payout: new BigNumber(rawItem.paid_total),
+        date: dayjs(rawItem.event_date),
+        currency: rawItem.dividend.currency,
+      };
+      return item;
+    });
+
+    return items;
   }
 }
 

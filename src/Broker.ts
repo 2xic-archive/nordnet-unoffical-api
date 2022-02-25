@@ -1,5 +1,5 @@
-import BigNumber from "bignumber.js";
-import { injectable } from "inversify";
+import BigNumber from 'bignumber.js';
+import { injectable } from 'inversify';
 
 @injectable()
 export abstract class Broker {
@@ -61,8 +61,8 @@ export interface Balance {
 }
 
 export enum MarketSide {
-  BUY = "BUY",
-  SELL = "SELL",
+  BUY = 'BUY',
+  SELL = 'SELL',
 }
 
 export interface SimpleOrder {
@@ -71,7 +71,7 @@ export interface SimpleOrder {
 }
 
 export interface OrderStatus {
-  status: "FILLED" | "OPEN" | "PARTIAL_FILLED";
+  status: 'FILLED' | 'OPEN' | 'PARTIAL_FILLED';
   remaining: BigNumber;
   matched: BigNumber;
   cancelled: BigNumber;

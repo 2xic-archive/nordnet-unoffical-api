@@ -1,5 +1,5 @@
-import BigNumber from "bignumber.js";
-import dayjs from "dayjs";
+import BigNumber from 'bignumber.js';
+import dayjs from 'dayjs';
 import {
   Balance,
   Broker,
@@ -8,18 +8,18 @@ import {
   OrderOptions,
   OrderStatus,
   SimpleOrder,
-} from "./Broker";
-import { injectable } from "inversify";
-import { MissingBalanceError } from "./errors/MissingBalanceError";
-import { StockPriceHigherThanBuyAmount } from "./errors/StockPriceHigherThanBuyAmount";
-import { TooLowBalance } from "./errors/TooLowBalance";
+} from './Broker';
+import { injectable } from 'inversify';
+import { MissingBalanceError } from './errors/MissingBalanceError';
+import { StockPriceHigherThanBuyAmount } from './errors/StockPriceHigherThanBuyAmount';
+import { TooLowBalance } from './errors/TooLowBalance';
 import {
   NordnetApi,
   NordnetGetMarketIdOptions,
   NordnetMarketId,
   NordnetOrderOptions,
   SimpleEquityResponse,
-} from "./http-nordnet/NordnetApi";
+} from './http-nordnet/NordnetApi';
 
 @injectable()
 export class NordnetBroker implements Broker {
@@ -28,7 +28,7 @@ export class NordnetBroker implements Broker {
   public async dca(options: DcaOrderOptions) {
     const market = await this.getSearch({
       query: options.stock,
-      exchangeCountry: "NO",
+      exchangeCountry: 'NO',
     });
     const price = new BigNumber(market.lastPrice);
     const quanity = new BigNumber(options.amount)
@@ -40,7 +40,7 @@ export class NordnetBroker implements Broker {
       await this.balance({
         accountId: options.accountId,
       })
-    ).find((item) => item.stock === "NOK");
+    ).find((item) => item.stock === 'NOK');
 
     if (!balance) {
       throw new MissingBalanceError();
@@ -60,19 +60,19 @@ export class NordnetBroker implements Broker {
   }
 
   public getOrderStatus(): Promise<OrderStatus> {
-    throw new Error("Method not implemented.");
+    throw new Error('Method not implemented.');
   }
 
   public async buy(options: OrderOptions): Promise<boolean> {
     const market = await this.getSearch({
       query: options.stock,
-      exchangeCountry: "NO",
+      exchangeCountry: 'NO',
     });
     const marketIdentifiers = await this.instrumentsFromInstrumentId({
       instrumentId: market.instrumentId,
     });
     if (!marketIdentifiers) {
-      throw new Error("Found no instrument id");
+      throw new Error('Found no instrument id');
     }
     const { marketId, identifier } = marketIdentifiers;
 
@@ -80,8 +80,8 @@ export class NordnetBroker implements Broker {
       price: options.price,
       volume: options.quanity,
       marketId,
-      validUntil: dayjs().add(3, "day"),
-      currency: "NOK",
+      validUntil: dayjs().add(3, 'day'),
+      currency: 'NOK',
       side: MarketSide.BUY,
       identifier,
       accountId: options.accountId,
@@ -89,11 +89,11 @@ export class NordnetBroker implements Broker {
   }
 
   public sell(): Promise<boolean> {
-    throw new Error("Method not implemented.");
+    throw new Error('Method not implemented.');
   }
 
   public deleteAllOrders(): Promise<boolean> {
-    throw new Error("Method not implemented.");
+    throw new Error('Method not implemented.');
   }
 
   public async balance({
@@ -111,19 +111,19 @@ export class NordnetBroker implements Broker {
   }): Promise<BigNumber> {
     const market = await this.getSearch({
       query: stock,
-      exchangeCountry: "NO",
+      exchangeCountry: 'NO',
     });
 
     const price = market.lastPrice;
 
     if (price.isZero()) {
-      throw new Error("Price should never be zero");
+      throw new Error('Price should never be zero');
     }
     return price;
   }
 
   public getOrderBook(): Promise<SimpleOrder[]> {
-    throw new Error("Method not implemented.");
+    throw new Error('Method not implemented.');
   }
 
   public async getSearch({

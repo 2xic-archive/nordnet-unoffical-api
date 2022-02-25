@@ -14,5 +14,10 @@
     "moduleResolution": "node",
     "emitDecoratorMetadata": true,
     "declaration": true,
-  }
+
+    "strictBindCallApply": true,
+    "strictFunctionTypes": true,
+    "strictNullChecks": true,
+  },
+  "include": ["./src/*"]
 }

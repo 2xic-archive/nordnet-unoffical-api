@@ -1,7 +1,7 @@
-import BigNumber from "bignumber.js";
-import { Dayjs } from "dayjs";
-import { injectable } from "inversify";
-import { Balance, MarketSide } from "../Broker";
+import BigNumber from 'bignumber.js';
+import { Dayjs } from 'dayjs';
+import { injectable } from 'inversify';
+import { Balance, MarketSide } from '../Broker';
 
 @injectable()
 export abstract class NordnetApi {
@@ -34,6 +34,10 @@ export abstract class NordnetApi {
     query: string;
     exchangeCountry: string;
   }): Promise<SimpleEquityResponse>;
+
+  public abstract getDividensReport(options?: {
+    historical: boolean;
+  }): Promise<SimpleDividensResponse[]>;
 }
 
 export interface NordnetOrderOptions {
@@ -59,4 +63,11 @@ export interface NordnetMarketId {
 export interface SimpleEquityResponse {
   lastPrice: BigNumber;
   instrumentId: string;
+}
+
+export interface SimpleDividensResponse {
+  instrument: string;
+  payout: BigNumber;
+  date: Dayjs;
+  currency: string;
 }

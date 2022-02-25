@@ -1,6 +1,11 @@
-import { injectable } from "inversify";
-import { Balance } from "../Broker";
-import { NordnetApi, NordnetMarketId, SimpleEquityResponse } from "./NordnetApi";
+import { injectable } from 'inversify';
+import { SimpleDividensResponse } from '..';
+import { Balance } from '../Broker';
+import {
+  NordnetApi,
+  NordnetMarketId,
+  SimpleEquityResponse,
+} from './NordnetApi';
 
 @injectable()
 export class MockNordnetApi implements NordnetApi {
@@ -17,7 +22,7 @@ export class MockNordnetApi implements NordnetApi {
   }
 
   public sendBatchRequest<T>(): Promise<T> {
-    throw new Error("Method not implemented.");
+    throw new Error('Method not implemented.');
   }
   public async preformOrder(): Promise<boolean> {
     return true;
@@ -28,26 +33,30 @@ export class MockNordnetApi implements NordnetApi {
   > {
     return {
       marketId: '1',
-      identifier: '1'
-    }
+      identifier: '1',
+    };
   }
 
   public async getAccountBalance(): Promise<Balance[]> {
     if (!this.balance) {
-      throw new Error("Balance not set");
+      throw new Error('Balance not set');
     }
     return [this.balance];
   }
 
   public getStockPrice(): Promise<Balance[]> {
-    throw new Error("Method not implemented.");
+    throw new Error('Method not implemented.');
   }
 
   public async searchEquityMarket(): Promise<SimpleEquityResponse> {
     if (!this.equityResponse) {
-      throw new Error("Equity response not set");
+      throw new Error('Equity response not set');
     }
 
     return this.equityResponse;
+  }
+
+  public getDividensReport(): Promise<SimpleDividensResponse[]> {
+    throw new Error('Method not implemented.');
   }
 }

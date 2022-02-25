@@ -7,7 +7,13 @@ Nordnet has no official api in Norway, and I was tired of waiting.
 ## Features
 Since I needed the api to do DCA (dollar cost averaging), only basic "broker" support has been added.
 
+It also has support for fetching upcomming dividens payouts.
+
 I might implemented some more features in the future. Feel free to open a issue if you need a feature, I might add it.
 
 ## How ? 
 Uses the old Nordnet login format with username, and password. This way there is no need to authenticate with BankId.
+
+### Usage
+There is an example in `examples/` folder. Since this code was part of a larger project, it was written with dependency injection in mind.
+
