@@ -9,26 +9,14 @@ import container from "./container";
   const api = container.get(NordnetApi);
   const payouts = await api.getDividensReport();
 
-  // month -> currency = BigNumber
-  const payoutByMonth: Record<string, Record<string, BigNumber>> = {};
+  let lastMonth: string | undefined = undefined;
   payouts.forEach((item) => {
-    const yearMonth = item.date.format("YYYY-MM");
-    if (!(yearMonth in payoutByMonth)) {
-      payoutByMonth[yearMonth] = {};
+    const currentMonth = item.date.format('MM');
+    if (lastMonth && lastMonth !==  currentMonth) {
+      console.log('');
     }
-    const currency = item.currency;
-    if (!(currency in payoutByMonth[yearMonth])) {
-      payoutByMonth[yearMonth][currency] = new BigNumber(0);
-    }
-    payoutByMonth[yearMonth][currency] = payoutByMonth[yearMonth][
-      currency
-    ].plus(item.payout);
-  });
+    lastMonth = currentMonth;
 
-  for (const [yearMonth, payouts] of Object.entries(payoutByMonth)) {
-    console.log(yearMonth);
-    Object.entries(payouts).forEach(([currency, payout]) => {
-      console.log([currency, payout.toString()]);
-    });
-  }
+    console.log(`${item.instrument} has a payout of ${item.payout} ${item.currency} on ${item.date.format('YYYY-MM-DD')}`)
+  });
 })();
