@@ -25,7 +25,7 @@ import {
 export class NordnetBroker implements Broker {
   constructor(private nordnetApi: NordnetApi) {}
 
-  public async dca(options: DcaOrderOptions) {
+  public async dca(options: DcaOrderOptions): Promise<boolean> {
     const market = await this.getSearch({
       query: options.stock,
       exchangeCountry: 'NO',
