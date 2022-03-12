@@ -3,6 +3,8 @@ import { injectable } from 'inversify';
 
 @injectable()
 export abstract class Broker {
+  public abstract dca(options: DcaOrderOptions): Promise<void>;
+
   public abstract buy(options: OrderOptions): Promise<boolean>;
 
   public abstract sell(options: OrderOptions): Promise<boolean>;
