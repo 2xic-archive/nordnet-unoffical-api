@@ -1,7 +1,7 @@
 import BigNumber from 'bignumber.js';
 import { Dayjs } from 'dayjs';
 import { injectable } from 'inversify';
-import { Balance, MarketSide } from '../Broker';
+import { Balance, MarketSide, Transaction } from '../Broker';
 
 @injectable()
 export abstract class NordnetApi {
@@ -38,6 +38,16 @@ export abstract class NordnetApi {
   public abstract getDividensReport(options?: {
     historical: boolean;
   }): Promise<SimpleDividensResponse[]>;
+
+  public abstract getTransactionReport({
+    accountId,
+    fromDate,
+    toDate,
+  }: {
+    accountId: string;
+    fromDate: Dayjs;
+    toDate: Dayjs;
+  }): Promise<Transaction[]>;
 }
 
 export interface NordnetOrderOptions {

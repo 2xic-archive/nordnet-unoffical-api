@@ -1,4 +1,5 @@
 import BigNumber from 'bignumber.js';
+import { Dayjs } from 'dayjs';
 import { injectable } from 'inversify';
 
 @injectable()
@@ -8,6 +9,16 @@ export abstract class Broker {
   public abstract buy(options: OrderOptions): Promise<boolean>;
 
   public abstract sell(options: OrderOptions): Promise<boolean>;
+
+  public abstract getTransactionHistory({
+    accountId,
+    fromDate,
+    toDate,
+  }: {
+    accountId: string;
+    fromDate: Dayjs;
+    toDate: Dayjs;
+  }): Promise<Transaction[]>;
 
   public abstract deleteAllOrders({
     stock,
@@ -77,4 +88,12 @@ export interface OrderStatus {
   remaining: BigNumber;
   matched: BigNumber;
   cancelled: BigNumber;
+}
+
+export interface Transaction {
+  amount: BigNumber;
+  currency: string;
+  instrument?: {
+    symbol: string;
+  };
 }

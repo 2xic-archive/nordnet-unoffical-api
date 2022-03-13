@@ -1,9 +1,8 @@
 import BigNumber from 'bignumber.js';
-import dayjs from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import fetchSession, { SessionReturn } from 'fetch-session';
 import { injectable } from 'inversify';
-import { Balance } from '../Broker';
-
+import { Balance, Transaction } from '../Broker';
 import { HttpAuthenticate } from './HttpAuthenticate';
 import { HttpHeaderConstructor } from './HttpHeaderConstructor';
 import {
@@ -262,8 +261,6 @@ export class HttpNordnetApi implements NordnetApi {
       },
     ]);
 
-    //        [{"relative_url":"company_data/positionsevents/calendar?history=true","method":"GET"},{"relative_url":"company_data/positionsevents/dividend?history=true","method":"GET"}]
-
     const dividensItems = data[0].body.filter((item) => {
       const dividensType = ['dividend.CASH', 'dividend.SPECIAL_CASH'];
       return dividensType.includes(item.event_type);
@@ -280,6 +277,63 @@ export class HttpNordnetApi implements NordnetApi {
     });
 
     return items;
+  }
+
+  public async getTransactionReport({
+    accountId,
+    fromDate,
+    toDate,
+  }: {
+    accountId: string;
+    fromDate: Dayjs;
+    toDate: Dayjs;
+  }): Promise<Transaction[]> {
+    const allTransactions = `#ERS,#SL,#INB,IKBK,GROC,#RK,CRDFM,K,GRU,CRDFI,S,GRDFM,US,CUD,UD,#AVA,GTI`;
+    const fromDateString = fromDate.format('YYYY-MM-DD');
+    const toDateString = toDate.format('YYYY-MM-DD');
+
+    const ntag = await this.httpAuthentication.getAuth({
+      fetchSession: this.fetchSession,
+    });
+    const response = await this.fetchSession.fetch(
+      `https://www.nordnet.no/api/2/accounts/${accountId}/transactions/next?from=${fromDateString}&to=${toDateString}&limit=50&offset=0&transaction_type_id=${allTransactions}&currency=&symbol=`,
+      {
+        method: 'get',
+        headers: this.httpHeaderConstructor.getHeaders({
+          headers: {
+            ntag: ntag,
+            Accept: 'application/json',
+            'Accept-Encoding': 'gzip, deflate, br',
+
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Cache-Control': 'no-cache',
+            Connection: 'keep-alive',
+
+            'client-id': 'NEXT',
+          },
+        }),
+      }
+    );
+    if (!response) {
+      throw new Error('Expected a response');
+    }
+    const transactionRessponse =
+      response.body as unknown as TransactionRessponse;
+
+    const transactions: Transaction[] =
+      transactionRessponse.transaction_list.map((item): Transaction => {
+        return {
+          amount: new BigNumber(item.amount.value),
+          currency: item.amount.currency,
+          instrument: item.instrument
+            ? {
+                symbol: item.instrument?.symbol,
+              }
+            : undefined,
+        };
+      });
+
+    return transactions;
   }
 }
 
@@ -298,4 +352,33 @@ interface EquityResponse {
   diff_pct_one_day: number;
   exchange_country: string;
   currency: string;
+}
+
+interface TransactionRessponse {
+  transaction_list: Array<NordnetTransaction>;
+}
+
+interface NordnetTransaction {
+  transaction_id: number;
+  accounting_date: string;
+  business_date: string;
+  settlement_date: string;
+  currency_date: string;
+  transaction_type: {
+    transaction_type_id: string;
+    transaction_type_name: string;
+  };
+  amount: {
+    currency: string;
+    value: number;
+  };
+  instrument?: {
+    instrument_id: number;
+    symbol: string;
+    name: string;
+    display_name: string;
+    isin_code: string;
+    instrument_group_type: string;
+    currency: string;
+  };
 }

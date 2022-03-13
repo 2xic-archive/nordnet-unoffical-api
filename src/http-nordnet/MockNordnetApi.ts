@@ -1,6 +1,6 @@
 import { injectable } from 'inversify';
 import { SimpleDividensResponse } from '..';
-import { Balance } from '../Broker';
+import { Balance, Transaction } from '../Broker';
 import {
   NordnetApi,
   NordnetMarketId,
@@ -57,6 +57,10 @@ export class MockNordnetApi implements NordnetApi {
   }
 
   public getDividensReport(): Promise<SimpleDividensResponse[]> {
+    throw new Error('Method not implemented.');
+  }
+
+  public getTransactionReport(): Promise<Transaction[]> {
     throw new Error('Method not implemented.');
   }
 }

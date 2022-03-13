@@ -1,5 +1,5 @@
 import BigNumber from 'bignumber.js';
-import dayjs from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import {
   Balance,
   Broker,
@@ -8,6 +8,7 @@ import {
   OrderOptions,
   OrderStatus,
   SimpleOrder,
+  Transaction,
 } from './Broker';
 import { injectable } from 'inversify';
 import { MissingBalanceError } from './errors/MissingBalanceError';
@@ -136,6 +137,22 @@ export class NordnetBroker implements Broker {
     return this.nordnetApi.searchEquityMarket({
       exchangeCountry,
       query,
+    });
+  }
+
+  public getTransactionHistory({
+    accountId,
+    fromDate,
+    toDate,
+  }: {
+    accountId: string;
+    fromDate: Dayjs;
+    toDate: Dayjs;
+  }): Promise<Transaction[]> {
+    return this.nordnetApi.getTransactionReport({
+      accountId,
+      fromDate,
+      toDate,
     });
   }
 
