@@ -1,14 +1,15 @@
 import BigNumber from 'bignumber.js';
 import { Dayjs } from 'dayjs';
 import { injectable } from 'inversify';
+import { NordnetOrder } from './http-nordnet/NordnetApi';
 
 @injectable()
 export abstract class Broker {
-  public abstract dca(options: DcaOrderOptions): Promise<boolean>;
+  public abstract dca(options: DcaOrderOptions): Promise<NordnetOrder>;
 
-  public abstract buy(options: OrderOptions): Promise<boolean>;
+  public abstract buy(options: OrderOptions): Promise<NordnetOrder>;
 
-  public abstract sell(options: OrderOptions): Promise<boolean>;
+  public abstract sell(options: OrderOptions): Promise<NordnetOrder>;
 
   public abstract getTransactionHistory({
     accountId,
@@ -26,12 +27,12 @@ export abstract class Broker {
     stock: string;
   }): Promise<boolean>;
 
+  public abstract getAllOrders(): Promise<NordnetOrder[]>;
+
   public abstract getOrderStatus({
     orderId,
-    market,
   }: {
     orderId: number;
-    market: string;
   }): Promise<OrderStatus | null>;
 
   public abstract balance({
@@ -57,7 +58,7 @@ export abstract class Broker {
 
 export interface OrderOptions<market = string> {
   stock: market;
-  quanity: BigNumber;
+  quantity: BigNumber;
   price: BigNumber;
   accountId: string;
 }

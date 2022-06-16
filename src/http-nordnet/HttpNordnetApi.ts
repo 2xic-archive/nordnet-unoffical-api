@@ -7,8 +7,9 @@ import { HttpAuthenticate } from './HttpAuthenticate';
 import { HttpHeaderConstructor } from './HttpHeaderConstructor';
 import {
   NordnetApi,
+  NordnetOrder,
   NordnetOrderOptions,
-  SimpleDividensResponse,
+  SimpleDividendsResponse as SimpleDividendsResponse,
   SimpleEquityResponse,
 } from './NordnetApi';
 
@@ -63,7 +64,7 @@ export class HttpNordnetApi implements NordnetApi {
     validUntil,
     volume,
     accountId,
-  }: NordnetOrderOptions): Promise<boolean> {
+  }: NordnetOrderOptions): Promise<NordnetOrder> {
     const payload: Record<string, string> = {
       order_type: 'LIMIT',
       price: price.toString(),
@@ -102,7 +103,23 @@ export class HttpNordnetApi implements NordnetApi {
       throw new Error('Empty response');
     }
 
-    return !!response.body;
+    const parsedResponse: {
+      order_state: 'DELETED' | 'LOCAL';
+      order_id: number;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } = response.body as any;
+
+    const isDeleted = parsedResponse.order_state === 'DELETED';
+    const parsedOrder: NordnetOrder = isDeleted
+      ? {
+          state: 'INVALID',
+        }
+      : {
+          state: 'MARKET',
+          orderId: parsedResponse.order_id,
+        };
+
+    return parsedOrder;
   }
 
   public async getInstrumentsFromInstrumentId({
@@ -229,9 +246,9 @@ export class HttpNordnetApi implements NordnetApi {
     };
   }
 
-  public async getDividensReport(options?: {
+  public async getDividendsReport(options?: {
     historical: boolean;
-  }): Promise<SimpleDividensResponse[]> {
+  }): Promise<SimpleDividendsResponse[]> {
     const data = await this.sendBatchRequest<
       [
         {
@@ -266,8 +283,8 @@ export class HttpNordnetApi implements NordnetApi {
       return dividensType.includes(item.event_type);
     });
 
-    const items = dividensItems.map((rawItem): SimpleDividensResponse => {
-      const item: SimpleDividensResponse = {
+    const items = dividensItems.map((rawItem): SimpleDividendsResponse => {
+      const item: SimpleDividendsResponse = {
         instrument: rawItem.instrument.name,
         payout: new BigNumber(rawItem.paid_total),
         date: dayjs(rawItem.event_date),
@@ -317,11 +334,11 @@ export class HttpNordnetApi implements NordnetApi {
     if (!response) {
       throw new Error('Expected a response');
     }
-    const transactionRessponse =
+    const transactionResponse =
       response.body as unknown as TransactionRessponse;
 
     const transactions: Transaction[] =
-      transactionRessponse.transaction_list.map((item): Transaction => {
+      transactionResponse.transaction_list.map((item): Transaction => {
         return {
           amount: new BigNumber(item.amount.value),
           currency: item.amount.currency,
@@ -334,6 +351,31 @@ export class HttpNordnetApi implements NordnetApi {
       });
 
     return transactions;
+  }
+
+  public async getAllOrders(): Promise<NordnetOrder[]> {
+    const orders = await this.sendBatchRequest<
+      [
+        {
+          body: Array<{
+            order_id: number;
+            order_state: 'LOCAL';
+            volume: number;
+            instrument: NordnetInstrument;
+          }>;
+        }
+      ]
+    >([{ relative_url: 'accounts/orders', method: 'GET' }]).then(
+      (response) => response[0].body
+    );
+
+    return orders.map(
+      (item): NordnetOrder => ({
+        orderId: item.order_id,
+        state: item.order_state === 'LOCAL' ? 'MARKET' : 'UNKNOWN',
+        name: item.instrument.name,
+      })
+    );
   }
 }
 
@@ -372,13 +414,15 @@ interface NordnetTransaction {
     currency: string;
     value: number;
   };
-  instrument?: {
-    instrument_id: number;
-    symbol: string;
-    name: string;
-    display_name: string;
-    isin_code: string;
-    instrument_group_type: string;
-    currency: string;
-  };
+  instrument?: NordnetInstrument;
+}
+
+interface NordnetInstrument {
+  instrument_id: number;
+  symbol: string;
+  name: string;
+  display_name: string;
+  isin_code: string;
+  instrument_group_type: string;
+  currency: string;
 }

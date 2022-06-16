@@ -1,9 +1,10 @@
 import { injectable } from 'inversify';
-import { SimpleDividensResponse } from '..';
+import { SimpleDividendsResponse } from '..';
 import { Balance, Transaction } from '../Broker';
 import {
   NordnetApi,
   NordnetMarketId,
+  NordnetOrder,
   SimpleEquityResponse,
 } from './NordnetApi';
 
@@ -24,8 +25,11 @@ export class MockNordnetApi implements NordnetApi {
   public sendBatchRequest<T>(): Promise<T> {
     throw new Error('Method not implemented.');
   }
-  public async preformOrder(): Promise<boolean> {
-    return true;
+  public async preformOrder(): Promise<NordnetOrder> {
+    return {
+      state: 'MARKET',
+      orderId: 1,
+    };
   }
 
   public async getInstrumentsFromInstrumentId(): Promise<
@@ -56,11 +60,15 @@ export class MockNordnetApi implements NordnetApi {
     return this.equityResponse;
   }
 
-  public getDividensReport(): Promise<SimpleDividensResponse[]> {
+  public getDividendsReport(): Promise<SimpleDividendsResponse[]> {
     throw new Error('Method not implemented.');
   }
 
   public getTransactionReport(): Promise<Transaction[]> {
+    throw new Error('Method not implemented.');
+  }
+
+  public getAllOrders(): Promise<NordnetOrder[]> {
     throw new Error('Method not implemented.');
   }
 }

@@ -12,7 +12,9 @@ export abstract class NordnetApi {
     batch: Array<Record<string, unknown>>
   ): Promise<T>;
 
-  public abstract preformOrder(options: NordnetOrderOptions): Promise<boolean>;
+  public abstract preformOrder(
+    options: NordnetOrderOptions
+  ): Promise<NordnetOrder>;
 
   public abstract getInstrumentsFromInstrumentId(
     Options: NordnetGetMarketIdOptions
@@ -35,9 +37,9 @@ export abstract class NordnetApi {
     exchangeCountry: string;
   }): Promise<SimpleEquityResponse>;
 
-  public abstract getDividensReport(options?: {
+  public abstract getDividendsReport(options?: {
     historical: boolean;
-  }): Promise<SimpleDividensResponse[]>;
+  }): Promise<SimpleDividendsResponse[]>;
 
   public abstract getTransactionReport({
     accountId,
@@ -48,6 +50,8 @@ export abstract class NordnetApi {
     fromDate: Dayjs;
     toDate: Dayjs;
   }): Promise<Transaction[]>;
+
+  public abstract getAllOrders(): Promise<NordnetOrder[]>;
 }
 
 export interface NordnetOrderOptions {
@@ -75,9 +79,21 @@ export interface SimpleEquityResponse {
   instrumentId: string;
 }
 
-export interface SimpleDividensResponse {
+export interface SimpleDividendsResponse {
   instrument: string;
   payout: BigNumber;
   date: Dayjs;
   currency: string;
+}
+
+export type NordnetOrder = MarketOrder | InvalidOrder;
+
+interface MarketOrder {
+  state: 'MARKET' | 'UNKNOWN';
+  orderId: number;
+  name?: string;
+}
+
+interface InvalidOrder {
+  state: 'INVALID';
 }

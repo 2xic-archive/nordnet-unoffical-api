@@ -18,6 +18,7 @@ import {
   NordnetApi,
   NordnetGetMarketIdOptions,
   NordnetMarketId,
+  NordnetOrder,
   NordnetOrderOptions,
   SimpleEquityResponse,
 } from './http-nordnet/NordnetApi';
@@ -26,7 +27,7 @@ import {
 export class NordnetBroker implements Broker {
   constructor(private nordnetApi: NordnetApi) {}
 
-  public async dca(options: DcaOrderOptions): Promise<boolean> {
+  public async dca(options: DcaOrderOptions): Promise<NordnetOrder> {
     const market = await this.getSearch({
       query: options.stock,
       exchangeCountry: 'NO',
@@ -53,7 +54,7 @@ export class NordnetBroker implements Broker {
       return await this.buy({
         ...options,
         price,
-        quanity,
+        quantity: quanity,
       });
     } else {
       throw new TooLowBalance();
@@ -61,10 +62,14 @@ export class NordnetBroker implements Broker {
   }
 
   public getOrderStatus(): Promise<OrderStatus> {
-    throw new Error('Method not implemented.');
+    throw new Error('NOt implemented');
   }
 
-  public async buy(options: OrderOptions): Promise<boolean> {
+  public getAllOrders(): Promise<NordnetOrder[]> {
+    return this.nordnetApi.getAllOrders();
+  }
+
+  public async buy(options: OrderOptions): Promise<NordnetOrder> {
     const market = await this.getSearch({
       query: options.stock,
       exchangeCountry: 'NO',
@@ -79,17 +84,17 @@ export class NordnetBroker implements Broker {
 
     return this.preformOrder({
       price: options.price,
-      volume: options.quanity,
+      volume: options.quantity,
+      accountId: options.accountId,
+      identifier,
       marketId,
-      validUntil: dayjs().add(3, 'day'),
       currency: 'NOK',
       side: MarketSide.BUY,
-      identifier,
-      accountId: options.accountId,
+      validUntil: dayjs().add(7, 'day'),
     });
   }
 
-  public sell(): Promise<boolean> {
+  public sell(): Promise<NordnetOrder> {
     throw new Error('Method not implemented.');
   }
 
@@ -162,7 +167,9 @@ export class NordnetBroker implements Broker {
     return this.nordnetApi.getInstrumentsFromInstrumentId(options);
   }
 
-  private async preformOrder(options: NordnetOrderOptions): Promise<boolean> {
+  private async preformOrder(
+    options: NordnetOrderOptions
+  ): Promise<NordnetOrder> {
     return this.nordnetApi.preformOrder(options);
   }
 }
