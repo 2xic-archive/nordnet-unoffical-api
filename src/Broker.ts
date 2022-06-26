@@ -35,6 +35,14 @@ export abstract class Broker {
     orderId: number;
   }): Promise<OrderStatus | null>;
 
+  public abstract changeOrder({
+    orderId,
+    amount,
+  }: {
+    orderId: string;
+    amount: BigNumber;
+  }): Promise<NordnetOrder>;
+
   public abstract balance({
     accountId,
   }: {

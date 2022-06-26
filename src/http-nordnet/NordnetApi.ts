@@ -52,6 +52,11 @@ export abstract class NordnetApi {
   }): Promise<Transaction[]>;
 
   public abstract getAllOrders(): Promise<NordnetOrder[]>;
+
+  public abstract changeOrder(options: {
+    orderId: string;
+    amount: BigNumber;
+  }): Promise<NordnetOrder>;
 }
 
 export interface NordnetOrderOptions {

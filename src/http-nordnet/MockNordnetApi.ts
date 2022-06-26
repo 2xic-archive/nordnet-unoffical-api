@@ -1,3 +1,4 @@
+import BigNumber from 'bignumber.js';
 import { injectable } from 'inversify';
 import { SimpleDividendsResponse } from '..';
 import { Balance, Transaction } from '../Broker';
@@ -69,6 +70,13 @@ export class MockNordnetApi implements NordnetApi {
   }
 
   public getAllOrders(): Promise<NordnetOrder[]> {
+    throw new Error('Method not implemented.');
+  }
+
+  public changeOrder(options: {
+    orderId: string;
+    amount: BigNumber;
+  }): Promise<NordnetOrder> {
     throw new Error('Method not implemented.');
   }
 }

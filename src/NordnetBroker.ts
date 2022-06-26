@@ -172,4 +172,11 @@ export class NordnetBroker implements Broker {
   ): Promise<NordnetOrder> {
     return this.nordnetApi.preformOrder(options);
   }
+
+  public changeOrder(options: {
+    orderId: string;
+    amount: BigNumber;
+  }): Promise<NordnetOrder> {
+    return this.nordnetApi.changeOrder(options);
+  }
 }

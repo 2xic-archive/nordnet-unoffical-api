@@ -27,27 +27,13 @@ export class HttpNordnetApi implements NordnetApi {
   public async sendBatchRequest<T>(
     batch: Array<Record<string, unknown>>
   ): Promise<T> {
-    const ntag = await this.httpAuthentication.getAuth({
-      fetchSession: this.fetchSession,
+    const request = await this.sendApiRequest({
+      url: 'https://www.nordnet.no/api/2/batch',
+      body: JSON.stringify({
+        batch: JSON.stringify(batch),
+      }),
     });
 
-    const request = await this.fetchSession.fetch(
-      'https://www.nordnet.no/api/2/batch',
-      {
-        method: 'post',
-        headers: this.httpHeaderConstructor.getHeaders({
-          headers: {
-            ntag,
-            Accept: 'application/json',
-            'content-type': 'application/json',
-            'client-id': 'NEXT',
-          },
-        }),
-        body: JSON.stringify({
-          batch: JSON.stringify(batch),
-        }),
-      }
-    );
     if (!request) {
       throw new Error('Empty response');
     }
@@ -376,6 +362,68 @@ export class HttpNordnetApi implements NordnetApi {
         name: item.instrument.name,
       })
     );
+  }
+
+  public async changeOrder({
+    orderId,
+    amount,
+  }: {
+    orderId: string;
+    amount: BigNumber;
+  }): Promise<NordnetOrder> {
+    const request = await this.fetchSession.fetch(
+      `https://www.nordnet.no/api/2/accounts/orders/${orderId}`,
+      {
+        method: 'put',
+        headers: await this.apiHeaders({
+          contentType: 'application/x-www-form-urlencoded',
+        }),
+        body: `currency=NOK&price=${amount.decimalPlaces(2).toString()}`,
+      }
+    );
+
+    if (!request) {
+      throw new Error('');
+    }
+
+    const body = request?.body as unknown as {
+      order_id: number;
+      order_state: 'LOCAL';
+    };
+
+    throw {
+      orderId: body.order_id,
+      state: body.order_state === 'LOCAL',
+    };
+  }
+
+  private async sendApiRequest({ url, body }: { url: string; body: string }) {
+    const request = await this.fetchSession.fetch(url, {
+      method: 'post',
+      headers: await this.apiHeaders({}),
+      body,
+    });
+
+    return request;
+  }
+
+  private async apiHeaders({
+    contentType = 'application/json',
+  }: {
+    contentType?: string;
+  }) {
+    const ntag = await this.httpAuthentication.getAuth({
+      fetchSession: this.fetchSession,
+    });
+
+    return this.httpHeaderConstructor.getHeaders({
+      headers: {
+        ntag,
+        Accept: 'application/json',
+        'content-type': contentType,
+        'client-id': 'NEXT',
+      },
+    });
   }
 }
 
