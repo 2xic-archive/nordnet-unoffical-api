@@ -3,6 +3,7 @@ import { injectable } from 'inversify';
 import { SimpleDividendsResponse } from '..';
 import { Balance, Transaction } from '../Broker';
 import {
+  InstrumentInformation,
   NordnetApi,
   NordnetMarketId,
   NordnetOrder,
@@ -14,6 +15,12 @@ export class MockNordnetApi implements NordnetApi {
   private balance?: Balance;
 
   public equityResponse?: SimpleEquityResponse;
+
+  public instrumentMapping: Record<string, InstrumentInformation> = {};
+
+  public addInstrument(instrument: InstrumentInformation) {
+    this.instrumentMapping[instrument.id] = instrument;
+  }
 
   public setSearchResponse(value: SimpleEquityResponse) {
     this.equityResponse = value;
@@ -73,10 +80,19 @@ export class MockNordnetApi implements NordnetApi {
     throw new Error('Method not implemented.');
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public changeOrder(options: {
     orderId: string;
     amount: BigNumber;
   }): Promise<NordnetOrder> {
     throw new Error('Method not implemented.');
+  }
+
+  public async getInstrumentInformation({
+    instrumentId,
+  }: {
+    instrumentId: string;
+  }): Promise<InstrumentInformation | undefined> {
+    return this.instrumentMapping[instrumentId];
   }
 }

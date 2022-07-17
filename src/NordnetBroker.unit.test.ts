@@ -17,7 +17,7 @@ describe('NordnetBroker', () => {
     container.bind(NordnetBroker).toSelf();
   });
 
-  it('should throw an error if the account balance is low than dca amount', async () => {
+  it('should throw an error if the account balance is lower than dca amount', async () => {
     const nordnetApi = container.get(NordnetApi) as MockNordnetApi;
     nordnetApi.setBalanceResponse({
       balance: new BigNumber(0),
@@ -39,7 +39,7 @@ describe('NordnetBroker', () => {
     ).rejects.toBeInstanceOf(TooLowBalance);
   });
 
-  it('should not throw an error if the account balance is higher than dca amount', async () => {
+  it('should preform dca if account balance is higher than the dca amount', async () => {
     const nordnetApi = container.get(NordnetApi) as MockNordnetApi;
     nordnetApi.setBalanceResponse({
       balance: new BigNumber(1000),

@@ -20,6 +20,12 @@ export abstract class NordnetApi {
     Options: NordnetGetMarketIdOptions
   ): Promise<NordnetMarketId | undefined>;
 
+  public abstract getInstrumentInformation({
+    instrumentId,
+  }: {
+    instrumentId: string;
+  }): Promise<InstrumentInformation | undefined>;
+
   /*
     accountId is found on nordnet, it's just the account number (single digit for most)
   */
@@ -101,4 +107,11 @@ interface MarketOrder {
 
 interface InvalidOrder {
   state: 'INVALID';
+}
+
+export interface InstrumentInformation {
+  id: string;
+  price: {
+    lastPrice: BigNumber;
+  };
 }

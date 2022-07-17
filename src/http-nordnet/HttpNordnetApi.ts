@@ -6,6 +6,7 @@ import { Balance, Transaction } from '../Broker';
 import { HttpAuthenticate } from './HttpAuthenticate';
 import { HttpHeaderConstructor } from './HttpHeaderConstructor';
 import {
+  InstrumentInformation,
   NordnetApi,
   NordnetOrder,
   NordnetOrderOptions,
@@ -149,6 +150,55 @@ export class HttpNordnetApi implements NordnetApi {
       };
     }
     return undefined;
+  }
+
+  public async getInstrumentInformation({
+    instrumentId,
+  }: {
+    instrumentId: string;
+  }): Promise<InstrumentInformation | undefined> {
+    const ntag = await this.httpAuthentication.getAuth({
+      fetchSession: this.fetchSession,
+    });
+    const response = await this.fetchSession.fetch<{
+      results: Array<{
+        instrument_info: {
+          instrument_id: number;
+        };
+        price_info: {
+          last: {
+            price: number;
+          };
+        };
+      }>;
+    }>(
+      `https://www.nordnet.no/api/2/instrument_search/query/stocklist?apply_filters=instrument_id=${instrumentId}`,
+      {
+        headers: this.httpHeaderConstructor.getHeaders({
+          headers: {
+            ntag: ntag,
+            'client-id': 'NEXT',
+            Accept: 'application/json',
+          },
+        }),
+      }
+    );
+    if (!response) {
+      throw new Error('Missing response');
+    }
+    const instruments = response.body.results;
+    const length = instruments.length;
+    if (length === 0) {
+      return undefined;
+    }
+
+    const [instrument] = instruments;
+    return {
+      id: instrument.instrument_info.instrument_id.toString(),
+      price: {
+        lastPrice: new BigNumber(instrument.price_info.last.price),
+      },
+    };
   }
 
   public async getAccountBalance({
