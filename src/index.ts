@@ -6,3 +6,4 @@ export * from './http-nordnet/NordnetApi';
 export * from './http-nordnet/MockNordnetApi';
 export * from './http-nordnet/HttpHeaderConstructor';
 export * from './http-nordnet/HttpAuthenticate';
+export * from './http-nordnet/FetchSession';

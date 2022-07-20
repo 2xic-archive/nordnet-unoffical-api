@@ -1,6 +1,6 @@
 import dayjs, { Dayjs } from 'dayjs';
-import { SessionReturn } from 'fetch-session';
 import { injectable } from 'inversify';
+import { FetchSession } from './FetchSession';
 import { HttpHeaderConstructor } from './HttpHeaderConstructor';
 
 @injectable()
@@ -13,7 +13,7 @@ export class HttpAuthenticate {
   public async getAuth({
     fetchSession,
   }: {
-    fetchSession: SessionReturn;
+    fetchSession: FetchSession;
   }): Promise<string> {
     if (!this.lastAuth || this.lastAuth.diff(dayjs(), 'seconds') > 60 * 5) {
       await this.login({ fetchSession });
@@ -26,7 +26,7 @@ export class HttpAuthenticate {
     return ntag;
   }
 
-  private async login({ fetchSession }: { fetchSession: SessionReturn }) {
+  private async login({ fetchSession }: { fetchSession: FetchSession }) {
     const username = process.env.NORDNET_USERNAME;
     const password = process.env.NORDNET_PASSWORD;
 
@@ -105,7 +105,7 @@ export class HttpAuthenticate {
   private async getBaseCookie({
     fetchSession,
   }: {
-    fetchSession: SessionReturn;
+    fetchSession: FetchSession;
   }) {
     await fetchSession.fetch('https://www.nordnet.no/', {
       headers: this.httpHeaderConstructor.getHeaders({

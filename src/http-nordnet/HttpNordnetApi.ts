@@ -1,6 +1,5 @@
 import BigNumber from 'bignumber.js';
 import dayjs, { Dayjs } from 'dayjs';
-import fetchSession, { SessionReturn } from 'fetch-session';
 import { injectable } from 'inversify';
 import { Balance, Transaction } from '../Broker';
 import { HttpAuthenticate } from './HttpAuthenticate';
@@ -13,17 +12,15 @@ import {
   SimpleDividendsResponse as SimpleDividendsResponse,
   SimpleEquityResponse,
 } from './NordnetApi';
+import { FetchSession } from './FetchSession';
 
 @injectable()
 export class HttpNordnetApi implements NordnetApi {
-  private fetchSession: SessionReturn;
-
   constructor(
     private httpAuthentication: HttpAuthenticate,
-    private httpHeaderConstructor: HttpHeaderConstructor
-  ) {
-    this.fetchSession = fetchSession();
-  }
+    private httpHeaderConstructor: HttpHeaderConstructor,
+    private fetchSession: FetchSession
+  ) {}
 
   public async sendBatchRequest<T>(
     batch: Array<Record<string, unknown>>

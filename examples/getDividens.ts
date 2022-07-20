@@ -6,7 +6,7 @@ import container from "./container";
 
 (async () => {
   const api = container.get(NordnetApi);
-  const payouts = await api.getDividensReport();
+  const payouts = await api.getDividendsReport();
 
   let lastMonth: string | undefined = undefined;
   payouts.forEach((item) => {

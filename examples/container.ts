@@ -1,5 +1,6 @@
 import { Container } from 'inversify';
 import {
+  FetchSession,
   HttpAuthenticate,
   HttpHeaderConstructor,
   HttpNordnetApi,
@@ -15,5 +16,6 @@ container.bind(NordnetBroker).toSelf();
 container.bind(NordnetApi).to(HttpNordnetApi);
 container.bind(HttpAuthenticate).toSelf();
 container.bind(HttpHeaderConstructor).toSelf();
+container.bind(FetchSession).toSelf();
 
 export default container;
