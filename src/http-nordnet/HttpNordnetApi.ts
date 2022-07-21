@@ -166,6 +166,24 @@ export class HttpNordnetApi implements NordnetApi {
           last: {
             price: number;
           };
+          ask: {
+            price: number;
+          };
+          open: {
+            price: number;
+          };
+          close: {
+            price: number;
+          };
+          bid: {
+            price: number;
+          };
+          low: {
+            price: number;
+          };
+          high: {
+            price: number;
+          };
         };
       }>;
     }>(
@@ -194,6 +212,12 @@ export class HttpNordnetApi implements NordnetApi {
       id: instrument.instrument_info.instrument_id.toString(),
       price: {
         lastPrice: new BigNumber(instrument.price_info.last.price),
+        ask: new BigNumber(instrument.price_info.ask.price),
+        bid: new BigNumber(instrument.price_info.bid.price),
+        close: new BigNumber(instrument.price_info.close.price),
+        open: new BigNumber(instrument.price_info.open.price),
+        low: new BigNumber(instrument.price_info.low.price),
+        high: new BigNumber(instrument.price_info.high.price),
       },
     };
   }

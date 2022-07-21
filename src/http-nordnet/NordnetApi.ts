@@ -113,5 +113,11 @@ export interface InstrumentInformation {
   id: string;
   price: {
     lastPrice: BigNumber;
+    close: BigNumber;
+    open: BigNumber;
+    low: BigNumber;
+    high: BigNumber;
+    ask: BigNumber;
+    bid: BigNumber;
   };
 }
