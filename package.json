@@ -1,6 +1,6 @@
 {
   "name": "nordnet-unofficial-api",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Unofficial for nordnet.no",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
