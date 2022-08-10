@@ -27,7 +27,7 @@ export abstract class NordnetApi {
   }): Promise<InstrumentInformation | undefined>;
 
   /*
-    accountId is found on nordnet, it's just the account number (single digit for most)
+    accountId is found on nordnet, it's just the account id (single digit for most)
   */
   public abstract getAccountBalance({
     accountId,
@@ -58,6 +58,12 @@ export abstract class NordnetApi {
   }): Promise<Transaction[]>;
 
   public abstract getAllOrders(): Promise<NordnetOrder[]>;
+
+  public abstract getAllPositions({
+    accountId,
+  }: {
+    accountId: string;
+  }): Promise<Position[]>;
 
   public abstract changeOrder(options: {
     orderId: string;
@@ -95,6 +101,16 @@ export interface SimpleDividendsResponse {
   payout: BigNumber;
   date: Dayjs;
   currency: string;
+}
+
+export interface Position {
+  currency: string;
+  quantity: string;
+  instrument: string;
+  profits: BigNumber;
+  instrumentGroupType: string;
+  morningPrice: BigNumber;
+  acquiredPrice: BigNumber;
 }
 
 export type NordnetOrder = MarketOrder | InvalidOrder;

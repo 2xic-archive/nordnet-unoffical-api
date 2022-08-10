@@ -9,6 +9,7 @@ import {
   NordnetApi,
   NordnetOrder,
   NordnetOrderOptions,
+  Position,
   SimpleDividendsResponse as SimpleDividendsResponse,
   SimpleEquityResponse,
 } from './NordnetApi';
@@ -466,6 +467,54 @@ export class HttpNordnetApi implements NordnetApi {
       orderId: body.order_id,
       state: body.order_state === 'LOCAL',
     };
+  }
+
+  public async getAllPositions({
+    accountId,
+  }: {
+    accountId: string;
+  }): Promise<Position[]> {
+    const positions = await this.sendBatchRequest<
+      [
+        {
+          body: Array<{
+            qty: number;
+            instrument: NordnetInstrument;
+            currency: string;
+            morning_price: {
+              currency: string;
+              value: number;
+            };
+            acq_price: {
+              currency: string;
+              value: number;
+            };
+          }>;
+        }
+      ]
+    >([
+      {
+        relative_url: `accounts/${accountId}/positions?include_instrument_loans=true`,
+        method: 'GET',
+      },
+    ]).then((response) => response[0].body);
+
+    return positions.map(
+      (item): Position => ({
+        currency:
+          item.currency ||
+          item.morning_price.currency ||
+          item.acq_price.currency,
+        quantity: item.qty.toString(),
+        instrument: item.instrument.name,
+        instrumentGroupType: item.instrument.instrument_group_type,
+        morningPrice: new BigNumber(item.morning_price.value),
+        acquiredPrice: new BigNumber(item.acq_price.value),
+        profits: new BigNumber(item.morning_price.value)
+          .minus(item.acq_price.value)
+          .multipliedBy(item.qty),
+      })
+    );
   }
 
   private async sendApiRequest({ url, body }: { url: string; body: string }) {

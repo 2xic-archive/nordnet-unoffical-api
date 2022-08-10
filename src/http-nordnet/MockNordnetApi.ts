@@ -7,6 +7,7 @@ import {
   NordnetApi,
   NordnetMarketId,
   NordnetOrder,
+  Position,
   SimpleEquityResponse,
 } from './NordnetApi';
 
@@ -94,5 +95,9 @@ export class MockNordnetApi implements NordnetApi {
     instrumentId: string;
   }): Promise<InstrumentInformation | undefined> {
     return this.instrumentMapping[instrumentId];
+  }
+
+  public getAllPositions(): Promise<Position[]> {
+    throw new Error('Method not implemented.');
   }
 }
