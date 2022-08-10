@@ -36,4 +36,6 @@ import container from './container';
     const fundReducedCurrentTotal = fund.map((item) => item.morningPrice.multipliedBy(item.quantity)).reduce((a, b) => a.plus(b));
 
     console.log(fundReducedCurrentTotal.dividedBy(fundReducedAcquiredTotal).multipliedBy(100).toString())
+
+    console.log(mainPositions.map((item) => item.instrumentId))
 })();

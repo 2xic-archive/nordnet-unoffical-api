@@ -507,6 +507,7 @@ export class HttpNordnetApi implements NordnetApi {
           item.acq_price.currency,
         quantity: item.qty.toString(),
         instrument: item.instrument.name,
+        instrumentId: item.instrument.instrument_id.toString(),
         instrumentGroupType: item.instrument.instrument_group_type,
         morningPrice: new BigNumber(item.morning_price.value),
         acquiredPrice: new BigNumber(item.acq_price.value),
