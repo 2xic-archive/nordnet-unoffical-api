@@ -4,8 +4,8 @@ import {
   Balance,
   Broker,
   DcaOrderOptions,
+  InstrumentOrderOptions,
   MarketSide,
-  OrderOptions,
   OrderStatus,
   SimpleOrder,
   Transaction,
@@ -25,7 +25,7 @@ import {
 
 @injectable()
 export class NordnetBroker implements Broker {
-  constructor(private nordnetApi: NordnetApi) {}
+  constructor(private nordnetApi: NordnetApi) { }
 
   public async dca(options: DcaOrderOptions): Promise<NordnetOrder> {
     const market = await this.getSearch({
@@ -33,11 +33,11 @@ export class NordnetBroker implements Broker {
       exchangeCountry: 'NO',
     });
     const price = new BigNumber(market.lastPrice);
-    const quanity = new BigNumber(options.amount)
+    const quantity = new BigNumber(options.amount)
       .dividedBy(market.lastPrice)
       .integerValue(BigNumber.ROUND_FLOOR);
 
-    const total = price.multipliedBy(quanity);
+    const total = price.multipliedBy(quantity);
     const balance = (
       await this.balance({
         accountId: options.accountId,
@@ -52,9 +52,10 @@ export class NordnetBroker implements Broker {
       throw new StockPriceHigherThanBuyAmount();
     } else if (balance.balance.isGreaterThan(total)) {
       return await this.buy({
+        instrumentId: market.instrumentId,
         ...options,
         price,
-        quantity: quanity,
+        quantity,
       });
     } else {
       throw new TooLowBalance();
@@ -69,33 +70,52 @@ export class NordnetBroker implements Broker {
     return this.nordnetApi.getAllOrders();
   }
 
-  public async buy(options: OrderOptions): Promise<NordnetOrder> {
-    const market = await this.getSearch({
-      query: options.stock,
-      exchangeCountry: 'NO',
+  public async buy(options: InstrumentOrderOptions): Promise<NordnetOrder> {
+    const instrument = await this.nordnetApi.getInstrumentInformation({
+      instrumentId: options.instrumentId,
     });
-    const marketIdentifiers = await this.instrumentsFromInstrumentId({
-      instrumentId: market.instrumentId,
-    });
-    if (!marketIdentifiers) {
+    if (!instrument) {
       throw new Error('Found no instrument id');
     }
-    const { marketId, identifier } = marketIdentifiers;
+
+    if (instrument.currency !== 'NOK') {
+      throw new Error('Only NOK is currently supported (saftey first)');
+    }
 
     return this.preformOrder({
       price: options.price,
       volume: options.quantity,
       accountId: options.accountId,
-      identifier,
-      marketId,
+      marketIdentifier: instrument.market.identifier,
+      marketId: instrument.market.id,
       currency: 'NOK',
       side: MarketSide.BUY,
       validUntil: dayjs().add(7, 'day'),
     });
   }
 
-  public sell(): Promise<NordnetOrder> {
-    throw new Error('Method not implemented.');
+  public async sell(options: InstrumentOrderOptions): Promise<NordnetOrder> {
+    const instrument = await this.nordnetApi.getInstrumentInformation({
+      instrumentId: options.instrumentId,
+    });
+    if (!instrument) {
+      throw new Error('Found no instrument id');
+    }
+
+    if (instrument.currency !== 'NOK') {
+      throw new Error('Only NOK is currently supported (saftey first)');
+    }
+
+    return this.preformOrder({
+      price: options.price,
+      volume: options.quantity,
+      accountId: options.accountId,
+      marketIdentifier: instrument.market.identifier,
+      marketId: instrument.market.id,
+      currency: 'NOK',
+      side: MarketSide.SELL,
+      validUntil: dayjs().add(7, 'day'),
+    });
   }
 
   public deleteAllOrders(): Promise<boolean> {

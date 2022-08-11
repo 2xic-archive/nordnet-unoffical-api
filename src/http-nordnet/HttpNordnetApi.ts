@@ -21,7 +21,7 @@ export class HttpNordnetApi implements NordnetApi {
     private httpAuthentication: HttpAuthenticate,
     private httpHeaderConstructor: HttpHeaderConstructor,
     private fetchSession: FetchSession
-  ) {}
+  ) { }
 
   public async sendBatchRequest<T>(
     batch: Array<Record<string, unknown>>
@@ -43,7 +43,7 @@ export class HttpNordnetApi implements NordnetApi {
   public async preformOrder({
     price,
     currency,
-    identifier,
+    marketIdentifier: identifier,
     marketId,
     side,
     validUntil,
@@ -97,12 +97,12 @@ export class HttpNordnetApi implements NordnetApi {
     const isDeleted = parsedResponse.order_state === 'DELETED';
     const parsedOrder: NordnetOrder = isDeleted
       ? {
-          state: 'INVALID',
-        }
+        state: 'INVALID',
+      }
       : {
-          state: 'MARKET',
-          orderId: parsedResponse.order_id,
-        };
+        state: 'MARKET',
+        orderId: parsedResponse.order_id,
+      };
 
     return parsedOrder;
   }
@@ -162,6 +162,12 @@ export class HttpNordnetApi implements NordnetApi {
       results: Array<{
         instrument_info: {
           instrument_id: number;
+          currency: string;
+          long_name: string;
+        };
+        market_info: {
+          market_id: string;
+          identifier: string;
         };
         price_info: {
           last: {
@@ -211,6 +217,12 @@ export class HttpNordnetApi implements NordnetApi {
     const [instrument] = instruments;
     return {
       id: instrument.instrument_info.instrument_id.toString(),
+      name: instrument.instrument_info.long_name,
+      currency: instrument.instrument_info.currency,
+      market: {
+        id: instrument.market_info.market_id,
+        identifier: instrument.market_info.identifier,
+      },
       price: {
         lastPrice: new BigNumber(instrument.price_info.last.price),
         ask: new BigNumber(instrument.price_info.ask.price),
@@ -266,8 +278,7 @@ export class HttpNordnetApi implements NordnetApi {
       fetchSession: this.fetchSession,
     });
     const response = await this.fetchSession.fetch(
-      `https://www.nordnet.no/api/2/main_search?query=${
-        query.split('.')[0]
+      `https://www.nordnet.no/api/2/main_search?query=${query.split('.')[0]
       }&search_space=ALL&limit=5`,
       {
         headers: this.httpHeaderConstructor.getHeaders({
@@ -329,9 +340,8 @@ export class HttpNordnetApi implements NordnetApi {
       ]
     >([
       {
-        relative_url: `company_data/positionsevents/dividend?history=${
-          options?.historical ? 'true' : 'false'
-        }`,
+        relative_url: `company_data/positionsevents/dividend?history=${options?.historical ? 'true' : 'false'
+          }`,
         method: 'GET',
       },
     ]);
@@ -402,8 +412,8 @@ export class HttpNordnetApi implements NordnetApi {
           currency: item.amount.currency,
           instrument: item.instrument
             ? {
-                symbol: item.instrument?.symbol,
-              }
+              symbol: item.instrument?.symbol,
+            }
             : undefined,
         };
       });

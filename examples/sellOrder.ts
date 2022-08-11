@@ -7,9 +7,9 @@ import container from "./container";
 
 (async () => {
     const api = container.get(NordnetBroker);
-    const response = await api.buy({
+    const response = await api.sell({
         instrumentId: '16105612',
-        price: new BigNumber(15),
+        price: new BigNumber(17),
         quantity: new BigNumber(2),
         accountId: '3'
     });

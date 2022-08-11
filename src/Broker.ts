@@ -7,9 +7,9 @@ import { NordnetOrder } from './http-nordnet/NordnetApi';
 export abstract class Broker {
   public abstract dca(options: DcaOrderOptions): Promise<NordnetOrder>;
 
-  public abstract buy(options: OrderOptions): Promise<NordnetOrder>;
+  public abstract buy(options: InstrumentOrderOptions): Promise<NordnetOrder>;
 
-  public abstract sell(options: OrderOptions): Promise<NordnetOrder>;
+  public abstract sell(options: InstrumentOrderOptions): Promise<NordnetOrder>;
 
   public abstract getTransactionHistory({
     accountId,
@@ -64,8 +64,8 @@ export abstract class Broker {
   }): Promise<SimpleOrder[]>;
 }
 
-export interface OrderOptions<market = string> {
-  stock: market;
+export interface InstrumentOrderOptions {
+  instrumentId: string;
   quantity: BigNumber;
   price: BigNumber;
   accountId: string;

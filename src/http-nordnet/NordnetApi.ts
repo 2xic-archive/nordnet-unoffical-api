@@ -74,7 +74,7 @@ export abstract class NordnetApi {
 export interface NordnetOrderOptions {
   price: BigNumber;
   currency: string;
-  identifier: string;
+  marketIdentifier: string;
   marketId: string;
   volume: BigNumber;
   validUntil: Dayjs;
@@ -128,6 +128,12 @@ interface InvalidOrder {
 
 export interface InstrumentInformation {
   id: string;
+  currency: string;
+  name: string;
+  market: {
+    id: string;
+    identifier: string;
+  };
   price: {
     lastPrice: BigNumber;
     close: BigNumber;
