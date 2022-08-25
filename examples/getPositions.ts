@@ -38,4 +38,5 @@ import container from './container';
     console.log(fundReducedCurrentTotal.dividedBy(fundReducedAcquiredTotal).multipliedBy(100).toString())
 
     console.log(mainPositions.map((item) => item.instrumentId))
+    console.log(mainPositions.map((item) => item.currentPrice.toString()))
 })();

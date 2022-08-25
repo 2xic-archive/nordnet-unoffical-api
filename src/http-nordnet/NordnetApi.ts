@@ -110,6 +110,7 @@ export interface Position {
   profits: BigNumber;
   instrumentId: string;
   instrumentGroupType: string;
+  currentPrice: BigNumber;
   morningPrice: BigNumber;
   acquiredPrice: BigNumber;
 }

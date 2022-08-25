@@ -495,6 +495,10 @@ export class HttpNordnetApi implements NordnetApi {
               currency: string;
               value: number;
             };
+            main_market_price: {
+              currency: string;
+              value: number;
+            };
             acq_price: {
               currency: string;
               value: number;
@@ -519,9 +523,10 @@ export class HttpNordnetApi implements NordnetApi {
         instrument: item.instrument.name,
         instrumentId: item.instrument.instrument_id.toString(),
         instrumentGroupType: item.instrument.instrument_group_type,
+        currentPrice: new BigNumber(item.main_market_price.value),
         morningPrice: new BigNumber(item.morning_price.value),
         acquiredPrice: new BigNumber(item.acq_price.value),
-        profits: new BigNumber(item.morning_price.value)
+        profits: new BigNumber(item.main_market_price.value)
           .minus(item.acq_price.value)
           .multipliedBy(item.qty),
       })
