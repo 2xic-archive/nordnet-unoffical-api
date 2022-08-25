@@ -15,9 +15,11 @@ import {
 export class MockNordnetApi implements NordnetApi {
   private balance?: Balance;
 
-  public equityResponse?: SimpleEquityResponse;
+  private equityResponse?: SimpleEquityResponse;
 
-  public instrumentMapping: Record<string, InstrumentInformation> = {};
+  private instrumentMapping: Record<string, InstrumentInformation> = {};
+
+  private positions: Position[] = [];
 
   public addInstrument(instrument: InstrumentInformation) {
     this.instrumentMapping[instrument.id] = instrument;
@@ -29,6 +31,10 @@ export class MockNordnetApi implements NordnetApi {
 
   public setBalanceResponse(value: Balance) {
     this.balance = value;
+  }
+
+  public setPositionsResponse(value: Position[]) {
+    this.positions = value;
   }
 
   public sendBatchRequest<T>(): Promise<T> {
@@ -97,7 +103,7 @@ export class MockNordnetApi implements NordnetApi {
     return this.instrumentMapping[instrumentId];
   }
 
-  public getAllPositions(): Promise<Position[]> {
-    throw new Error('Method not implemented.');
+  public async getAllPositions(): Promise<Position[]> {
+    return this.positions;
   }
 }
