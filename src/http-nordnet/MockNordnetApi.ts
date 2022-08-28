@@ -19,7 +19,7 @@ export class MockNordnetApi implements NordnetApi {
 
   private instrumentMapping: Record<string, InstrumentInformation> = {};
 
-  private positions: Position[] = [];
+  private positions: Record<string, Position[]> = {};
 
   public addInstrument(instrument: InstrumentInformation) {
     this.instrumentMapping[instrument.id] = instrument;
@@ -33,8 +33,14 @@ export class MockNordnetApi implements NordnetApi {
     this.balance = value;
   }
 
-  public setPositionsResponse(value: Position[]) {
-    this.positions = value;
+  public setPositionsResponse({
+    accountId,
+    value,
+  }: {
+    accountId: string;
+    value: Position[];
+  }) {
+    this.positions[accountId] = value;
   }
 
   public sendBatchRequest<T>(): Promise<T> {
@@ -103,7 +109,11 @@ export class MockNordnetApi implements NordnetApi {
     return this.instrumentMapping[instrumentId];
   }
 
-  public async getAllPositions(): Promise<Position[]> {
-    return this.positions;
+  public async getAllPositions({
+    accountId,
+  }: {
+    accountId: string;
+  }): Promise<Position[]> {
+    return this.positions[accountId];
   }
 }

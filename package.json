@@ -1,7 +1,7 @@
 {
   "name": "nordnet-unofficial-api",
-  "version": "0.2.4",
-  "description": "Unofficial for nordnet.no",
+  "version": "0.2.5",
+  "description": "Unofficial api for nordnet.no",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -15,6 +15,7 @@
   },
   "scripts": {
     "test": "npm run build && jest",
+    "unit": "npm run test",
     "build": "tsc",
     "lint": "eslint src --resolve-plugins-relative-to . --fix",
     "prepare": "npm run build"
