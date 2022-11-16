@@ -1,4 +1,3 @@
-import BigNumber from 'bignumber.js';
 import dayjs from 'dayjs';
 import * as dotenv from 'dotenv';
 dotenv.config();

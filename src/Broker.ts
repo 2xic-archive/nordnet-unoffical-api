@@ -105,4 +105,8 @@ export interface Transaction {
   instrument?: {
     symbol: string;
   };
+  transaction?: {
+    id: string;
+    name: string;
+  };
 }

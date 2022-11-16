@@ -2,7 +2,7 @@ import BigNumber from "bignumber.js";
 import * as dotenv from "dotenv";
 dotenv.config();
 
-import { NordnetApi, NordnetBroker } from "../src";
+import { NordnetBroker } from "../src";
 import container from "./container";
 
 (async () => {

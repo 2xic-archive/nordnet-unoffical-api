@@ -25,7 +25,7 @@ import {
 
 @injectable()
 export class NordnetBroker implements Broker {
-  constructor(private nordnetApi: NordnetApi) { }
+  constructor(private nordnetApi: NordnetApi) {}
 
   public async dca(options: DcaOrderOptions): Promise<NordnetOrder> {
     const market = await this.getSearch({

@@ -21,7 +21,7 @@ export class HttpNordnetApi implements NordnetApi {
     private httpAuthentication: HttpAuthenticate,
     private httpHeaderConstructor: HttpHeaderConstructor,
     private fetchSession: FetchSession
-  ) { }
+  ) {}
 
   public async sendBatchRequest<T>(
     batch: Array<Record<string, unknown>>
@@ -97,12 +97,12 @@ export class HttpNordnetApi implements NordnetApi {
     const isDeleted = parsedResponse.order_state === 'DELETED';
     const parsedOrder: NordnetOrder = isDeleted
       ? {
-        state: 'INVALID',
-      }
+          state: 'INVALID',
+        }
       : {
-        state: 'MARKET',
-        orderId: parsedResponse.order_id,
-      };
+          state: 'MARKET',
+          orderId: parsedResponse.order_id,
+        };
 
     return parsedOrder;
   }
@@ -278,7 +278,8 @@ export class HttpNordnetApi implements NordnetApi {
       fetchSession: this.fetchSession,
     });
     const response = await this.fetchSession.fetch(
-      `https://www.nordnet.no/api/2/main_search?query=${query.split('.')[0]
+      `https://www.nordnet.no/api/2/main_search?query=${
+        query.split('.')[0]
       }&search_space=ALL&limit=5`,
       {
         headers: this.httpHeaderConstructor.getHeaders({
@@ -340,8 +341,9 @@ export class HttpNordnetApi implements NordnetApi {
       ]
     >([
       {
-        relative_url: `company_data/positionsevents/dividend?history=${options?.historical ? 'true' : 'false'
-          }`,
+        relative_url: `company_data/positionsevents/dividend?history=${
+          options?.historical ? 'true' : 'false'
+        }`,
         method: 'GET',
       },
     ]);
@@ -373,7 +375,8 @@ export class HttpNordnetApi implements NordnetApi {
     fromDate: Dayjs;
     toDate: Dayjs;
   }): Promise<Transaction[]> {
-    const allTransactions = `#ERS,#SL,#INB,IKBK,GROC,#RK,CRDFM,K,GRU,CRDFI,S,GRDFM,US,CUD,UD,#AVA,GTI`;
+    const allTransactions =
+      '#ERS,#SL,#INB,IKBK,GROC,#RK,CRDFM,K,GRU,CRDFI,S,GRDFM,US,CUD,UD,#AVA,GTI';
     const fromDateString = fromDate.format('YYYY-MM-DD');
     const toDateString = toDate.format('YYYY-MM-DD');
 
@@ -402,8 +405,7 @@ export class HttpNordnetApi implements NordnetApi {
     if (!response) {
       throw new Error('Expected a response');
     }
-    const transactionResponse =
-      response.body as unknown as TransactionRessponse;
+    const transactionResponse = response.body as unknown as TransactionResponse;
 
     const transactions: Transaction[] =
       transactionResponse.transaction_list.map((item): Transaction => {
@@ -412,9 +414,13 @@ export class HttpNordnetApi implements NordnetApi {
           currency: item.amount.currency,
           instrument: item.instrument
             ? {
-              symbol: item.instrument?.symbol,
-            }
+                symbol: item.instrument?.symbol,
+              }
             : undefined,
+          transaction: {
+            id: item.transaction_type.transaction_type_id,
+            name: item.transaction_type.transaction_type_name,
+          },
         };
       });
 
@@ -580,7 +586,7 @@ interface EquityResponse {
   currency: string;
 }
 
-interface TransactionRessponse {
+interface TransactionResponse {
   transaction_list: Array<NordnetTransaction>;
 }
 
