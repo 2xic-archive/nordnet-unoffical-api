@@ -51,10 +51,14 @@ export abstract class NordnetApi {
     accountId,
     fromDate,
     toDate,
+    limit,
+    offset,
   }: {
     accountId: string;
     fromDate: Dayjs;
     toDate: Dayjs;
+    limit: number;
+    offset: number;
   }): Promise<Transaction[]>;
 
   public abstract getAllOrders(): Promise<NordnetOrder[]>;

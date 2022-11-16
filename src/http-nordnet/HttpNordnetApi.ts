@@ -370,10 +370,14 @@ export class HttpNordnetApi implements NordnetApi {
     accountId,
     fromDate,
     toDate,
+    limit,
+    offset,
   }: {
     accountId: string;
     fromDate: Dayjs;
     toDate: Dayjs;
+    limit: number;
+    offset: number;
   }): Promise<Transaction[]> {
     const allTransactions =
       '#ERS,#SL,#INB,IKBK,GROC,#RK,CRDFM,K,GRU,CRDFI,S,GRDFM,US,CUD,UD,#AVA,GTI';
@@ -384,7 +388,7 @@ export class HttpNordnetApi implements NordnetApi {
       fetchSession: this.fetchSession,
     });
     const response = await this.fetchSession.fetch(
-      `https://www.nordnet.no/api/2/accounts/${accountId}/transactions/next?from=${fromDateString}&to=${toDateString}&limit=50&offset=0&transaction_type_id=${allTransactions}&currency=&symbol=`,
+      `https://www.nordnet.no/api/2/accounts/${accountId}/transactions/next?from=${fromDateString}&to=${toDateString}&limit=${limit}&offset=${offset}&transaction_type_id=${allTransactions}&currency=&symbol=`,
       {
         method: 'get',
         headers: this.httpHeaderConstructor.getHeaders({
