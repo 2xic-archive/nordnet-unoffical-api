@@ -169,15 +169,21 @@ export class NordnetBroker implements Broker {
     accountId,
     fromDate,
     toDate,
+    limit,
+    offset,
   }: {
     accountId: string;
     fromDate: Dayjs;
     toDate: Dayjs;
+    limit: number;
+    offset: number;
   }): Promise<Transaction[]> {
     return this.nordnetApi.getTransactionReport({
       accountId,
       fromDate,
       toDate,
+      limit,
+      offset,
     });
   }
 
