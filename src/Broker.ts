@@ -100,13 +100,16 @@ export interface OrderStatus {
 }
 
 export interface Transaction {
-  amount: BigNumber;
+  settled?: Dayjs;
+  totalAmount: BigNumber;
+  quantity: BigNumber;
   currency: string;
+  instrumentPrice: BigNumber;
   instrument?: {
     symbol: string;
   };
   transaction?: {
-    id: string;
-    name: string;
+    id?: string;
+    name?: string;
   };
 }

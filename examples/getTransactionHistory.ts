@@ -11,6 +11,8 @@ import container from './container';
     accountId: '3',
     fromDate: dayjs('2022-01-01'),
     toDate: dayjs(),
+    offset: 0,
+    limit: 50,
   });
 
   console.log(JSON.stringify(transactions));

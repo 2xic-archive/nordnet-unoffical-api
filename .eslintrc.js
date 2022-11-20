@@ -27,5 +27,13 @@ module.exports = {
     'prettier/prettier': 'error',
     'no-useless-escape': 0,
     'no-unused-vars': 'off',
+    "max-len": [
+      "error",
+      {
+        "code": 80,
+        "ignoreStrings": true,
+        "ignoreComments": true,
+      }
+    ]
   },
 };

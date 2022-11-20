@@ -380,7 +380,7 @@ export class HttpNordnetApi implements NordnetApi {
     offset: number;
   }): Promise<Transaction[]> {
     const allTransactions =
-      '#ERS,#SL,#INB,IKBK,GROC,#RK,CRDFM,K,GRU,CRDFI,S,GRDFM,US,CUD,UD,#AVA,GTI';
+      '#INB,GBI,#IAG,GSPI,GTI,CRDFI,US,CRDFM,#UAG,#ERS,CUS,CSI,GSI,GROC,GRU,GRMI,#SL,GRDMI,CROC,GSU,CAAC,IKBK,CUD,IE,GRDUU,#RK,UD,GRDU,GCU,GRDFM,#AVA,CSU,GBU,K,S';
     const fromDateString = fromDate.format('YYYY-MM-DD');
     const toDateString = toDate.format('YYYY-MM-DD');
 
@@ -414,7 +414,10 @@ export class HttpNordnetApi implements NordnetApi {
     const transactions: Transaction[] =
       transactionResponse.transaction_list.map((item): Transaction => {
         return {
-          amount: new BigNumber(item.amount.value),
+          totalAmount: new BigNumber(item.amount.value),
+          quantity: new BigNumber(item.quantity),
+          instrumentPrice: new BigNumber(item.price.value),
+          settled: dayjs(item.settlement_date),
           currency: item.amount.currency,
           instrument: item.instrument
             ? {
@@ -598,7 +601,7 @@ interface NordnetTransaction {
   transaction_id: number;
   accounting_date: string;
   business_date: string;
-  settlement_date: string;
+  settlement_date?: string;
   currency_date: string;
   transaction_type: {
     transaction_type_id: string;
@@ -608,7 +611,12 @@ interface NordnetTransaction {
     currency: string;
     value: number;
   };
+  price: {
+    currency: string;
+    value: number;
+  };
   instrument?: NordnetInstrument;
+  quantity: number;
 }
 
 interface NordnetInstrument {
