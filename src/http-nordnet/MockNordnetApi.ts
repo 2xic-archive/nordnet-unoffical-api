@@ -33,13 +33,7 @@ export class MockNordnetApi implements NordnetApi {
     this.balance = value;
   }
 
-  public setPositionsResponse({
-    accountId,
-    value,
-  }: {
-    accountId: string;
-    value: Position[];
-  }) {
+  public setPositionsResponse({ accountId, value }: { accountId: string; value: Position[] }) {
     this.positions[accountId] = value;
   }
 
@@ -53,9 +47,7 @@ export class MockNordnetApi implements NordnetApi {
     };
   }
 
-  public async getInstrumentsFromInstrumentId(): Promise<
-    NordnetMarketId | undefined
-  > {
+  public async getInstrumentsFromInstrumentId(): Promise<NordnetMarketId | undefined> {
     return {
       marketId: '1',
       identifier: '1',
@@ -94,10 +86,7 @@ export class MockNordnetApi implements NordnetApi {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public changeOrder(options: {
-    orderId: string;
-    amount: BigNumber;
-  }): Promise<NordnetOrder> {
+  public changeOrder(options: { orderId: string; amount: BigNumber }): Promise<NordnetOrder> {
     throw new Error('Method not implemented.');
   }
 
@@ -109,11 +98,7 @@ export class MockNordnetApi implements NordnetApi {
     return this.instrumentMapping[instrumentId];
   }
 
-  public async getAllPositions({
-    accountId,
-  }: {
-    accountId: string;
-  }): Promise<Position[]> {
+  public async getAllPositions({ accountId }: { accountId: string }): Promise<Position[]> {
     return this.positions[accountId];
   }
 }

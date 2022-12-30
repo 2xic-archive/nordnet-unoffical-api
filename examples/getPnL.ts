@@ -28,11 +28,18 @@ async function getAccountTransactions({ accountId }: { accountId: string }) {
             allTransactions.push(...transactions);
             hasTransactions = false;
         }
+
         await new Promise<void>((resolve) => setTimeout(resolve, 500))
         offset += limit;
     }
 
     return allTransactions;
+}
+
+async function getMarketPrice({ instrumentId }: { instrumentId: string }) {
+    return api.getInstrumentInformation({
+        instrumentId
+    }).then((item) => item?.price)
 }
 
 
@@ -53,6 +60,7 @@ async function getAccountTransactions({ accountId }: { accountId: string }) {
         price: BigNumber;
     }[]>> = {};
     const instrumentsPnL: Record<string, BigNumber> = {};
+    const instrument2InstrumentId: Record<string, string> = {};
 
     // Standard FIFO PnL
     transactions.forEach((item) => {
@@ -62,20 +70,21 @@ async function getAccountTransactions({ accountId }: { accountId: string }) {
             }
             instruments[item.instrument?.symbol]?.push({
                 price: item.instrumentPrice,
-                quantity:item.quantity
+                quantity: item.quantity
             });
             instrumentsPnL[item.instrument.symbol] = new BigNumber(0);
+            instrument2InstrumentId[item.instrument.symbol] = item.instrument.id;
         } else if (item.transaction?.id === 'S' && item.instrument?.symbol) {
             let quantityBalance: BigNumber = item.quantity;
-            while(instruments[item.instrument.symbol]?.length && quantityBalance.isGreaterThan(0)){
+            while (instruments[item.instrument.symbol]?.length && quantityBalance.isGreaterThan(0)) {
                 const buyTransactionAmount = instruments[item.instrument.symbol];
                 if (!buyTransactionAmount) {
                     throw new Error(`Found no buy transaction ${item.instrument.symbol}`)
                 }
                 const buy = buyTransactionAmount[0];
-                const {price, quantity} = buy;
-                const hasBuyTransaction = quantity.isGreaterThan(0);
-                if (hasBuyTransaction) {
+                const { price, quantity } = buy;
+                const hasUnspentTransaction = quantity.isGreaterThan(0);
+                if (hasUnspentTransaction) {
                     const delta = BigNumber.min(quantity, quantityBalance);
                     instrumentsPnL[item.instrument.symbol] = instrumentsPnL[item.instrument.symbol].plus(delta.multipliedBy(item.instrumentPrice.minus(price)));
                     quantityBalance = quantityBalance.minus(delta);
@@ -93,12 +102,25 @@ async function getAccountTransactions({ accountId }: { accountId: string }) {
         dividends: dividends.toString(),
     })
     let sum = new BigNumber(0);
+    let unrealized = new BigNumber(0);
     for (const [instrument, PnL] of Object.entries(instrumentsPnL)) {
-        if (PnL.isZero()){
+        if (PnL.isZero()) {
             continue;
         }
-        console.log(`${instrument} ${PnL.toString()} (Holding quantity ${instruments[instrument]?.map((item) => item.quantity)?.reduce((a, b) => a?.plus(b), new BigNumber(0))})`)
+        const holdingQuantity = instruments[instrument]?.map((item) => item.quantity)?.reduce((a, b) => a?.plus(b), new BigNumber(0));
+        console.log(`${instrument} ${PnL.toString()} (Holding quantity ${holdingQuantity})`)
         sum = sum.plus(PnL);
+        if (holdingQuantity?.isGreaterThan(0) && instrument2InstrumentId[instrument]) {
+            const marketPrice = await getMarketPrice({
+                instrumentId: instrument2InstrumentId[instrument]
+            })
+            if (marketPrice) {
+                const delta = (instruments[instrument] || [])?.map((item) => (marketPrice?.lastPrice.minus(item.price))?.times(item.quantity)).reduce((a, b) => a?.plus(b), new BigNumber(0));
+                unrealized = unrealized.plus(delta);
+                console.log(`(Unrealized) ${instrument} ${delta}`)
+            }
+        }
     }
-    console.log(`Sum ${sum.toString()}`)
+    console.log(`Trading profits ${sum.toString()}`);
+    console.log(`Unrealized profits ${unrealized}`)
 })();

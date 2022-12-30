@@ -33,9 +33,7 @@ export class NordnetBroker implements Broker {
       exchangeCountry: 'NO',
     });
     const price = new BigNumber(market.lastPrice);
-    const quantity = new BigNumber(options.amount)
-      .dividedBy(market.lastPrice)
-      .integerValue(BigNumber.ROUND_FLOOR);
+    const quantity = new BigNumber(options.amount).dividedBy(market.lastPrice).integerValue(BigNumber.ROUND_FLOOR);
 
     const total = price.multipliedBy(quantity);
     const balance = (
@@ -122,19 +120,11 @@ export class NordnetBroker implements Broker {
     throw new Error('Method not implemented.');
   }
 
-  public async balance({
-    accountId,
-  }: {
-    accountId: string;
-  }): Promise<Balance[]> {
+  public async balance({ accountId }: { accountId: string }): Promise<Balance[]> {
     return this.nordnetApi.getAccountBalance({ accountId });
   }
 
-  public async getMarketPrice({
-    stock,
-  }: {
-    stock: string;
-  }): Promise<BigNumber> {
+  public async getMarketPrice({ stock }: { stock: string }): Promise<BigNumber> {
     const market = await this.getSearch({
       query: stock,
       exchangeCountry: 'NO',
@@ -187,22 +177,15 @@ export class NordnetBroker implements Broker {
     });
   }
 
-  private async instrumentsFromInstrumentId(
-    options: NordnetGetMarketIdOptions
-  ): Promise<NordnetMarketId | undefined> {
+  private async instrumentsFromInstrumentId(options: NordnetGetMarketIdOptions): Promise<NordnetMarketId | undefined> {
     return this.nordnetApi.getInstrumentsFromInstrumentId(options);
   }
 
-  private async preformOrder(
-    options: NordnetOrderOptions
-  ): Promise<NordnetOrder> {
+  private async preformOrder(options: NordnetOrderOptions): Promise<NordnetOrder> {
     return this.nordnetApi.preformOrder(options);
   }
 
-  public changeOrder(options: {
-    orderId: string;
-    amount: BigNumber;
-  }): Promise<NordnetOrder> {
+  public changeOrder(options: { orderId: string; amount: BigNumber }): Promise<NordnetOrder> {
     return this.nordnetApi.changeOrder(options);
   }
 }

@@ -8,13 +8,9 @@ export abstract class NordnetApi {
   /*
     Special api method, allows for multiple request at the same time.
   */
-  public abstract sendBatchRequest<T>(
-    batch: Array<Record<string, unknown>>
-  ): Promise<T>;
+  public abstract sendBatchRequest<T>(batch: Array<Record<string, unknown>>): Promise<T>;
 
-  public abstract preformOrder(
-    options: NordnetOrderOptions
-  ): Promise<NordnetOrder>;
+  public abstract preformOrder(options: NordnetOrderOptions): Promise<NordnetOrder>;
 
   public abstract getInstrumentsFromInstrumentId(
     Options: NordnetGetMarketIdOptions
@@ -29,11 +25,7 @@ export abstract class NordnetApi {
   /*
     accountId is found on nordnet, it's just the account id (single digit for most)
   */
-  public abstract getAccountBalance({
-    accountId,
-  }: {
-    accountId: string;
-  }): Promise<Balance[]>;
+  public abstract getAccountBalance({ accountId }: { accountId: string }): Promise<Balance[]>;
 
   public abstract searchEquityMarket({
     query,
@@ -43,9 +35,7 @@ export abstract class NordnetApi {
     exchangeCountry: string;
   }): Promise<SimpleEquityResponse>;
 
-  public abstract getDividendsReport(options?: {
-    historical: boolean;
-  }): Promise<SimpleDividendsResponse[]>;
+  public abstract getDividendsReport(options?: { historical: boolean }): Promise<SimpleDividendsResponse[]>;
 
   public abstract getTransactionReport({
     accountId,
@@ -63,16 +53,9 @@ export abstract class NordnetApi {
 
   public abstract getAllOrders(): Promise<NordnetOrder[]>;
 
-  public abstract getAllPositions({
-    accountId,
-  }: {
-    accountId: string;
-  }): Promise<Position[]>;
+  public abstract getAllPositions({ accountId }: { accountId: string }): Promise<Position[]>;
 
-  public abstract changeOrder(options: {
-    orderId: string;
-    amount: BigNumber;
-  }): Promise<NordnetOrder>;
+  public abstract changeOrder(options: { orderId: string; amount: BigNumber }): Promise<NordnetOrder>;
 }
 
 export interface NordnetOrderOptions {

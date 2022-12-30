@@ -30,9 +30,10 @@ module.exports = {
     "max-len": [
       "error",
       {
-        "code": 80,
+        "code": 120,
         "ignoreStrings": true,
         "ignoreComments": true,
+        "ignoreUrls": true
       }
     ]
   },

@@ -19,5 +19,5 @@
     "strictFunctionTypes": true,
     "strictNullChecks": true,
   },
-  "include": ["./src/*"]
+  "include": ["./src/**/*"]
 }

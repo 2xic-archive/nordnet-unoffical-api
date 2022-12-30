@@ -21,39 +21,17 @@ export abstract class Broker {
     toDate: Dayjs;
   }): Promise<Transaction[]>;
 
-  public abstract deleteAllOrders({
-    stock,
-  }: {
-    stock: string;
-  }): Promise<boolean>;
+  public abstract deleteAllOrders({ stock }: { stock: string }): Promise<boolean>;
 
   public abstract getAllOrders(): Promise<NordnetOrder[]>;
 
-  public abstract getOrderStatus({
-    orderId,
-  }: {
-    orderId: number;
-  }): Promise<OrderStatus | null>;
+  public abstract getOrderStatus({ orderId }: { orderId: number }): Promise<OrderStatus | null>;
 
-  public abstract changeOrder({
-    orderId,
-    amount,
-  }: {
-    orderId: string;
-    amount: BigNumber;
-  }): Promise<NordnetOrder>;
+  public abstract changeOrder({ orderId, amount }: { orderId: string; amount: BigNumber }): Promise<NordnetOrder>;
 
-  public abstract balance({
-    accountId,
-  }: {
-    accountId: string;
-  }): Promise<Balance[]>;
+  public abstract balance({ accountId }: { accountId: string }): Promise<Balance[]>;
 
-  public abstract getMarketPrice({
-    stock,
-  }: {
-    stock: string;
-  }): Promise<BigNumber>;
+  public abstract getMarketPrice({ stock }: { stock: string }): Promise<BigNumber>;
 
   public abstract getOrderBook({
     market,
@@ -107,6 +85,7 @@ export interface Transaction {
   instrumentPrice: BigNumber;
   instrument?: {
     symbol: string;
+    id: string;
   };
   transaction?: {
     id?: string;

@@ -7,3 +7,6 @@ export * from './http-nordnet/MockNordnetApi';
 export * from './http-nordnet/HttpHeaderConstructor';
 export * from './http-nordnet/HttpAuthenticate';
 export * from './http-nordnet/FetchSession';
+export * from './utils/SilentLogger';
+export * from './utils/Logger';
+export * from './utils/ActiveLogger';
