@@ -16,6 +16,10 @@ export class FetchSession {
   } | null> {
     return this.fetchSession.fetch<T>(url, options);
   }
+
+  public clear() {
+    this.fetchSession = fetchSession();
+  }
 }
 
 // from fetch-session
