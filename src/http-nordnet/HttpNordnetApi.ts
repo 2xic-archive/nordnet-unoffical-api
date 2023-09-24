@@ -5,6 +5,7 @@ import { Balance, Transaction } from '../Broker';
 import { HttpAuthenticate } from './HttpAuthenticate';
 import { HttpHeaderConstructor } from './HttpHeaderConstructor';
 import {
+  InstrumentFundInformation,
   InstrumentInformation,
   NordnetApi,
   NordnetOrder,
@@ -147,12 +148,12 @@ export class HttpNordnetApi implements NordnetApi {
     instrumentId,
   }: {
     instrumentId: string;
-  }): Promise<InstrumentInformation | undefined> {
+  }): Promise<InstrumentInformation | InstrumentFundInformation | undefined> {
     const ntag = await this.httpAuthentication.getAuth({
       fetchSession: this.fetchSession,
     });
     const response = await this.fetchSession.fetch<{
-      results: Array<{
+      results?: Array<{
         instrument_info: {
           instrument_id: number;
           currency: string;
@@ -162,31 +163,37 @@ export class HttpNordnetApi implements NordnetApi {
           market_id: string;
           identifier: string;
         };
-        price_info: {
-          last: {
-            price: number;
-          };
-          ask: {
-            price: number;
-          };
-          open: {
-            price: number;
-          };
-          close: {
-            price: number;
-          };
-          bid: {
-            price: number;
-          };
-          low: {
-            price: number;
-          };
-          high: {
-            price: number;
-          };
-        };
+        price_info:
+          | {
+              last: {
+                price: number;
+              };
+              ask: {
+                price: number;
+              };
+              open: {
+                price: number;
+              };
+              close: {
+                price: number;
+              };
+              bid: {
+                price: number;
+              };
+              low: {
+                price: number;
+              };
+              high: {
+                price: number;
+              };
+            }
+          | {
+              last: {
+                price: number;
+              };
+            };
       }>;
-    }>(`https://www.nordnet.no/api/2/instrument_search/query/stocklist?apply_filters=instrument_id=${instrumentId}`, {
+    }>(`https://www.nordnet.no/api/2/instrument_search/query/instrument?apply_filters=instrument_id=${instrumentId}`, {
       headers: this.httpHeaderConstructor.getHeaders({
         headers: {
           ntag: ntag,
@@ -200,30 +207,45 @@ export class HttpNordnetApi implements NordnetApi {
     }
 
     const instruments = response.body.results;
-    const length = instruments.length;
-    if (length === 0) {
+    const length = instruments?.length;
+    if (length === 0 || !instruments) {
       return undefined;
     }
 
     const [instrument] = instruments;
-    return {
-      id: instrument.instrument_info.instrument_id.toString(),
-      name: instrument.instrument_info.long_name,
-      currency: instrument.instrument_info.currency,
-      market: {
-        id: instrument.market_info.market_id,
-        identifier: instrument.market_info.identifier,
-      },
-      price: {
-        lastPrice: new BigNumber(instrument.price_info.last.price),
-        ask: new BigNumber(instrument.price_info.ask.price),
-        bid: new BigNumber(instrument.price_info.bid.price),
-        close: new BigNumber(instrument.price_info.close.price),
-        open: new BigNumber(instrument.price_info.open.price),
-        low: new BigNumber(instrument.price_info.low.price),
-        high: new BigNumber(instrument.price_info.high.price),
-      },
-    };
+    if ('low' in instrument.price_info) {
+      return {
+        id: instrument.instrument_info.instrument_id.toString(),
+        name: instrument.instrument_info.long_name,
+        currency: instrument.instrument_info.currency,
+        market: {
+          id: instrument.market_info.market_id,
+          identifier: instrument.market_info.identifier,
+        },
+        price: {
+          lastPrice: new BigNumber(instrument.price_info.last.price),
+          ask: new BigNumber(instrument.price_info.ask.price),
+          bid: new BigNumber(instrument.price_info.bid.price),
+          close: new BigNumber(instrument.price_info.close.price),
+          open: new BigNumber(instrument.price_info.open.price),
+          low: new BigNumber(instrument.price_info.low.price),
+          high: new BigNumber(instrument.price_info.high.price),
+        },
+      };
+    } else {
+      return {
+        id: instrument.instrument_info.instrument_id.toString(),
+        name: instrument.instrument_info.long_name,
+        currency: instrument.instrument_info.currency,
+        market: {
+          id: instrument.market_info.market_id,
+          identifier: instrument.market_info.identifier,
+        },
+        price: {
+          lastPrice: new BigNumber(instrument.price_info.last.price),
+        },
+      };
+    }
   }
 
   public async getAccountBalance({ accountId }: { accountId: string }): Promise<Balance[]> {

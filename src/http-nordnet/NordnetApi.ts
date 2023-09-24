@@ -20,7 +20,7 @@ export abstract class NordnetApi {
     instrumentId,
   }: {
     instrumentId: string;
-  }): Promise<InstrumentInformation | undefined>;
+  }): Promise<InstrumentInformation | InstrumentFundInformation | undefined>;
 
   /*
     accountId is found on nordnet, it's just the account id (single digit for most)
@@ -130,5 +130,18 @@ export interface InstrumentInformation {
     high: BigNumber;
     ask: BigNumber;
     bid: BigNumber;
+  };
+}
+
+export interface InstrumentFundInformation {
+  id: string;
+  currency: string;
+  name: string;
+  market: {
+    id: string;
+    identifier: string;
+  };
+  price: {
+    lastPrice: BigNumber;
   };
 }

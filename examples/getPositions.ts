@@ -30,13 +30,15 @@ import container from './container';
     */
     const equityReducedAcquiredTotal = equity.map((item) => item.acquiredPrice.multipliedBy(item.quantity)).reduce((a, b) => a.plus(b));
     const equityReducedCurrentTotal = equity.map((item) => item.morningPrice.multipliedBy(item.quantity)).reduce((a, b) => a.plus(b));
-    console.log(equityReducedCurrentTotal.dividedBy(equityReducedAcquiredTotal).multipliedBy(100).toString())
+    const profitPercentage = (equityReducedCurrentTotal.dividedBy(equityReducedAcquiredTotal).multipliedBy(100).decimalPlaces(2).toString())
+    console.log(`Equity profit percentage: ${profitPercentage}`)
 
     const fundReducedAcquiredTotal = fund.map((item) => item.acquiredPrice.multipliedBy(item.quantity)).reduce((a, b) => a.plus(b));
     const fundReducedCurrentTotal = fund.map((item) => item.morningPrice.multipliedBy(item.quantity)).reduce((a, b) => a.plus(b));
 
-    console.log(fundReducedCurrentTotal.dividedBy(fundReducedAcquiredTotal).multipliedBy(100).toString())
+    const fundProfitPercentage = (fundReducedCurrentTotal.dividedBy(fundReducedAcquiredTotal).multipliedBy(100).decimalPlaces(2).toString())
+    console.log(`Fund profit percentage: ${fundProfitPercentage}`)
 
-    console.log(mainPositions.map((item) => item.instrumentId))
-    console.log(mainPositions.map((item) => item.currentPrice.toString()))
+    //console.log(mainPositions.map((item) => item.instrumentId))
+    //console.log(mainPositions.map((item) => item.currentPrice.toString()))
 })();

@@ -8,6 +8,23 @@ import container from './container';
 
 const api = container.get(NordnetApi);
 
+
+function consoleLogRedColor(string: string){
+    console.log('\x1b[31m%s\x1b[0m', string);
+}
+
+function consoleLogGreenColor(string: string){
+    console.log('\x1b[32m%s\x1b[0m', string);
+}
+
+function colorPrint(string: string, value: BigNumber){
+    if (value.isLessThan(0)){
+        consoleLogRedColor(string);
+    } else {
+        consoleLogGreenColor(string);
+    }
+}
+
 async function getAccountTransactions({ accountId }: { accountId: string }) {
     const allTransactions: Transaction[] = [];
     const limit = 250;
@@ -39,12 +56,29 @@ async function getAccountTransactions({ accountId }: { accountId: string }) {
 async function getMarketPrice({ instrumentId }: { instrumentId: string }) {
     return api.getInstrumentInformation({
         instrumentId
-    }).then((item) => item?.price)
+    }).then((item) => {
+        const lastPrice = item?.price.lastPrice;
+        if (lastPrice){
+            return {
+                lastPrice,
+                currency: item.currency
+            };
+        }
+    })
+}
+
+function adjustCurrency({currency, value}: {value: BigNumber; currency: string}){
+    let adjustmentConstant = 1;
+    if (currency === 'USD') {
+        adjustmentConstant = 8;
+    }
+    return value.multipliedBy(adjustmentConstant);
 }
 
 
 (async () => {
     let transactions: Transaction[] = [];
+    // Replace with your account ids
     for (const accountId of ['1', '2', '3']) {
         const results = await getAccountTransactions({
             accountId
@@ -61,20 +95,27 @@ async function getMarketPrice({ instrumentId }: { instrumentId: string }) {
     }[]>> = {};
     const instrumentsPnL: Record<string, BigNumber> = {};
     const instrument2InstrumentId: Record<string, string> = {};
-
+    const instrument2Currency: Record<string, string> = {};
     // Standard FIFO PnL
     transactions.forEach((item) => {
+        const instrumentPriceAdjusted = item.instrumentPrice;
+        if (item.instrument){
+            instrument2Currency[item.instrument.symbol] = item.currency;
+        }
+        // Buy transaction
         if (item.transaction?.id === 'K' && item.instrument?.symbol) {
             if (!instruments[item.instrument?.symbol]) {
                 instruments[item.instrument?.symbol] = [];
             }
             instruments[item.instrument?.symbol]?.push({
-                price: item.instrumentPrice,
+                price: instrumentPriceAdjusted,
                 quantity: item.quantity
             });
             instrumentsPnL[item.instrument.symbol] = new BigNumber(0);
             instrument2InstrumentId[item.instrument.symbol] = item.instrument.id;
-        } else if (item.transaction?.id === 'S' && item.instrument?.symbol) {
+        } 
+        // Sell transaction
+        else if (item.transaction?.id === 'S' && item.instrument?.symbol) {
             let quantityBalance: BigNumber = item.quantity;
             while (instruments[item.instrument.symbol]?.length && quantityBalance.isGreaterThan(0)) {
                 const buyTransactionAmount = instruments[item.instrument.symbol];
@@ -86,7 +127,11 @@ async function getMarketPrice({ instrumentId }: { instrumentId: string }) {
                 const hasUnspentTransaction = quantity.isGreaterThan(0);
                 if (hasUnspentTransaction) {
                     const delta = BigNumber.min(quantity, quantityBalance);
-                    instrumentsPnL[item.instrument.symbol] = instrumentsPnL[item.instrument.symbol].plus(delta.multipliedBy(item.instrumentPrice.minus(price)));
+                    // I want the profits in a single currency
+                    instrumentsPnL[item.instrument.symbol] = adjustCurrency({
+                        value: instrumentsPnL[item.instrument.symbol].plus(delta.multipliedBy(instrumentPriceAdjusted.minus(price))),
+                        currency: item.currency,
+                    });
                     quantityBalance = quantityBalance.minus(delta);
                     buyTransactionAmount[0].quantity = buy.quantity.minus(delta);
                 } else {
@@ -96,31 +141,49 @@ async function getMarketPrice({ instrumentId }: { instrumentId: string }) {
         }
     })
 
-
     console.log({
         deposited: deposited.toString(),
         dividends: dividends.toString(),
     })
     let sum = new BigNumber(0);
     let unrealized = new BigNumber(0);
+    const output: Array<[string[], BigNumber]> = [];
     for (const [instrument, PnL] of Object.entries(instrumentsPnL)) {
-        if (PnL.isZero()) {
-            continue;
-        }
         const holdingQuantity = instruments[instrument]?.map((item) => item.quantity)?.reduce((a, b) => a?.plus(b), new BigNumber(0));
-        console.log(`${instrument} ${PnL.toString()} (Holding quantity ${holdingQuantity})`)
+        const outputLines: string[] = [
+        ]
+        if (!PnL.isZero()){
+            outputLines.push(`${instrument} ${PnL.toString()} (Holding quantity ${holdingQuantity})`)
+        }
+        let positionPnL = PnL;
         sum = sum.plus(PnL);
         if (holdingQuantity?.isGreaterThan(0) && instrument2InstrumentId[instrument]) {
             const marketPrice = await getMarketPrice({
                 instrumentId: instrument2InstrumentId[instrument]
             })
-            if (marketPrice) {
-                const delta = (instruments[instrument] || [])?.map((item) => (marketPrice?.lastPrice.minus(item.price))?.times(item.quantity)).reduce((a, b) => a?.plus(b), new BigNumber(0));
+            const instrumentTransactions = instruments[instrument];
+            if (marketPrice && instrumentTransactions) {
+                const avgBuyPrice = instrumentTransactions.map((item) => item.price).reduce((a, b) => a.plus(b), new BigNumber(0)).dividedBy(instrumentTransactions.length)
+                const delta = adjustCurrency({
+                    value: instrumentTransactions.map((item) => (marketPrice.lastPrice.minus(item.price)).times(item.quantity)).reduce((a, b) => a?.plus(b), new BigNumber(0)),
+                    currency: marketPrice.currency
+                });
                 unrealized = unrealized.plus(delta);
-                console.log(`(Unrealized) ${instrument} ${delta}`)
+                outputLines.push(`(Unrealized) ${instrument} ${delta} (buy avg ${avgBuyPrice}, price now ${marketPrice.lastPrice}, holding ${holdingQuantity})`)
+                positionPnL = positionPnL.plus(delta);
             }
         }
+        output.push([outputLines, positionPnL])
     }
+
+    for(const i of output.sort((a, b) => a[1].isLessThan(b[1]) ? -1 : 1)) {
+        for(const j of i[0]){
+            colorPrint(j, i[1])
+        }
+    }
+
+    console.log('');
     console.log(`Trading profits ${sum.toString()}`);
     console.log(`Unrealized profits ${unrealized}`)
 })();
+
