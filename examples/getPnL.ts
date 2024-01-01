@@ -169,7 +169,7 @@ function adjustCurrency({currency, value}: {value: BigNumber; currency: string})
                     currency: marketPrice.currency
                 });
                 unrealized = unrealized.plus(delta);
-                outputLines.push(`(Unrealized) ${instrument} ${delta} (buy avg ${avgBuyPrice}, price now ${marketPrice.lastPrice}, holding ${holdingQuantity})`)
+                outputLines.push(`(Unrealized) ${instrument}, PnL: ${delta} (buy avg ${avgBuyPrice}, price now ${marketPrice.lastPrice}, holding ${holdingQuantity})`)
                 positionPnL = positionPnL.plus(delta);
             }
         }
@@ -183,7 +183,10 @@ function adjustCurrency({currency, value}: {value: BigNumber; currency: string})
     }
 
     console.log('');
+    console.log(`Divides profits ${dividends.toString()}`);
     console.log(`Trading profits ${sum.toString()}`);
     console.log(`Unrealized profits ${unrealized}`)
+    const total = dividends.plus(sum).plus(unrealized);
+    console.log(`total (including unrealized) profits ${total}`)
 })();
 
