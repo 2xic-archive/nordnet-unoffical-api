@@ -327,6 +327,7 @@ export class HttpNordnetApi implements NordnetApi {
           body: Array<{
             event_type: string;
             event_date: string;
+            ex_date: string;
             dividend: {
               paid_per_share: number;
               currency: string;
@@ -347,16 +348,17 @@ export class HttpNordnetApi implements NordnetApi {
       },
     ]);
 
-    const dividensItems = data[0].body.filter((item) => {
-      const dividensType = ['dividend.CASH', 'dividend.SPECIAL_CASH'];
-      return dividensType.includes(item.event_type);
+    const dividesItems = data[0].body.filter((item) => {
+      const dividesType = ['dividend.CASH', 'dividend.SPECIAL_CASH'];
+      return dividesType.includes(item.event_type);
     });
 
-    const items = dividensItems.map((rawItem): SimpleDividendsResponse => {
+    const items = dividesItems.map((rawItem): SimpleDividendsResponse => {
       const item: SimpleDividendsResponse = {
         instrument: rawItem.instrument.name,
         payout: new BigNumber(rawItem.paid_total),
         date: dayjs(rawItem.event_date),
+        exDate: dayjs(rawItem.ex_date),
         currency: rawItem.dividend.currency,
       };
       return item;
@@ -418,6 +420,7 @@ export class HttpNordnetApi implements NordnetApi {
         instrument: item.instrument
           ? {
               symbol: item.instrument?.symbol,
+              groupType: item.instrument.instrument_group_type,
               id: item.instrument?.instrument_id?.toString(),
             }
           : undefined,
@@ -479,34 +482,37 @@ export class HttpNordnetApi implements NordnetApi {
   }
 
   public async getAllPositions({ accountId }: { accountId: string }): Promise<Position[]> {
-    const positions = await this.sendBatchRequest<
-      [
+    const positions =
+      (await this.sendBatchRequest<
+        [
+          {
+            body:
+              | Array<{
+                  qty: number;
+                  instrument: NordnetInstrument;
+                  currency: string;
+                  morning_price: {
+                    currency: string;
+                    value: number;
+                  };
+                  main_market_price: {
+                    currency: string;
+                    value: number;
+                  };
+                  acq_price: {
+                    currency: string;
+                    value: number;
+                  };
+                }>
+              | undefined;
+          }
+        ]
+      >([
         {
-          body: Array<{
-            qty: number;
-            instrument: NordnetInstrument;
-            currency: string;
-            morning_price: {
-              currency: string;
-              value: number;
-            };
-            main_market_price: {
-              currency: string;
-              value: number;
-            };
-            acq_price: {
-              currency: string;
-              value: number;
-            };
-          }>;
-        }
-      ]
-    >([
-      {
-        relative_url: `accounts/${accountId}/positions?include_instrument_loans=true`,
-        method: 'GET',
-      },
-    ]).then((response) => response[0].body);
+          relative_url: `accounts/${accountId}/positions?include_instrument_loans=true`,
+          method: 'GET',
+        },
+      ]).then((response) => response[0].body)) || [];
 
     return positions.map(
       (item): Position => ({

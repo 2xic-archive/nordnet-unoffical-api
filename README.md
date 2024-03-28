@@ -1,4 +1,4 @@
-# nordnet-unoffical-api
+# nordnet-unofficial-api
 **No warranty is given. No complaints will be answered. Use at your own risk.**
 
 

@@ -85,6 +85,7 @@ export interface Transaction {
   instrumentPrice: BigNumber;
   instrument?: {
     symbol: string;
+    groupType: string;
     id: string;
   };
   transaction?: {

@@ -7,18 +7,27 @@ import { NordnetApi, Transaction } from '../src';
 import container from './container';
 
 const api = container.get(NordnetApi);
+BigNumber.config({
+    FORMAT: {
+        prefix: '',
+        decimalSeparator: '.',
+        groupSeparator: ' ',
+        groupSize: 3,
+        fractionGroupSize: 0,
+        suffix: ''
+    }
+});
 
-
-function consoleLogRedColor(string: string){
+function consoleLogRedColor(string: string) {
     console.log('\x1b[31m%s\x1b[0m', string);
 }
 
-function consoleLogGreenColor(string: string){
+function consoleLogGreenColor(string: string) {
     console.log('\x1b[32m%s\x1b[0m', string);
 }
 
-function colorPrint(string: string, value: BigNumber){
-    if (value.isLessThan(0)){
+function colorPrint(string: string, value: BigNumber) {
+    if (value.isLessThan(0)) {
         consoleLogRedColor(string);
     } else {
         consoleLogGreenColor(string);
@@ -58,7 +67,7 @@ async function getMarketPrice({ instrumentId }: { instrumentId: string }) {
         instrumentId
     }).then((item) => {
         const lastPrice = item?.price.lastPrice;
-        if (lastPrice){
+        if (lastPrice) {
             return {
                 lastPrice,
                 currency: item.currency
@@ -67,7 +76,7 @@ async function getMarketPrice({ instrumentId }: { instrumentId: string }) {
     })
 }
 
-function adjustCurrency({currency, value}: {value: BigNumber; currency: string}){
+function adjustCurrency({ currency, value }: { value: BigNumber; currency: string }) {
     let adjustmentConstant = 1;
     if (currency === 'USD') {
         adjustmentConstant = 8;
@@ -93,13 +102,17 @@ function adjustCurrency({currency, value}: {value: BigNumber; currency: string})
         quantity: BigNumber;
         price: BigNumber;
     }[]>> = {};
+    const instrumentInfo: Partial<Record<string, {
+        instrumentGroupType?: string;
+    }>> = {};
+
     const instrumentsPnL: Record<string, BigNumber> = {};
     const instrument2InstrumentId: Record<string, string> = {};
     const instrument2Currency: Record<string, string> = {};
     // Standard FIFO PnL
     transactions.forEach((item) => {
         const instrumentPriceAdjusted = item.instrumentPrice;
-        if (item.instrument){
+        if (item.instrument) {
             instrument2Currency[item.instrument.symbol] = item.currency;
         }
         // Buy transaction
@@ -109,11 +122,14 @@ function adjustCurrency({currency, value}: {value: BigNumber; currency: string})
             }
             instruments[item.instrument?.symbol]?.push({
                 price: instrumentPriceAdjusted,
-                quantity: item.quantity
+                quantity: item.quantity,
             });
+            instrumentInfo[item.instrument.symbol] = {
+                instrumentGroupType: item.instrument.groupType,
+            }
             instrumentsPnL[item.instrument.symbol] = new BigNumber(0);
             instrument2InstrumentId[item.instrument.symbol] = item.instrument.id;
-        } 
+        }
         // Sell transaction
         else if (item.transaction?.id === 'S' && item.instrument?.symbol) {
             let quantityBalance: BigNumber = item.quantity;
@@ -147,16 +163,28 @@ function adjustCurrency({currency, value}: {value: BigNumber; currency: string})
     })
     let sum = new BigNumber(0);
     let unrealized = new BigNumber(0);
+    let stockVsFunds: Record<
+        'stock' | 'funds',
+        BigNumber
+    > = {
+        'stock': new BigNumber(0),
+        'funds': new BigNumber(0),
+    }
     const output: Array<[string[], BigNumber]> = [];
     for (const [instrument, PnL] of Object.entries(instrumentsPnL)) {
         const holdingQuantity = instruments[instrument]?.map((item) => item.quantity)?.reduce((a, b) => a?.plus(b), new BigNumber(0));
         const outputLines: string[] = [
         ]
-        if (!PnL.isZero()){
+        if (!PnL.isZero()) {
             outputLines.push(`${instrument} ${PnL.toString()} (Holding quantity ${holdingQuantity})`)
         }
         let positionPnL = PnL;
         sum = sum.plus(PnL);
+        if (instrumentInfo[instrument]?.instrumentGroupType === 'FND') {
+            stockVsFunds['funds'] = stockVsFunds['funds'].plus(PnL)
+        } else {
+            stockVsFunds['stock'] = stockVsFunds['stock'].plus(PnL)
+        }
         if (holdingQuantity?.isGreaterThan(0) && instrument2InstrumentId[instrument]) {
             const marketPrice = await getMarketPrice({
                 instrumentId: instrument2InstrumentId[instrument]
@@ -169,6 +197,13 @@ function adjustCurrency({currency, value}: {value: BigNumber; currency: string})
                     currency: marketPrice.currency
                 });
                 unrealized = unrealized.plus(delta);
+                
+                if (instrumentInfo[instrument]?.instrumentGroupType === 'FND') {
+                    stockVsFunds['funds'] = stockVsFunds['funds'].plus(delta)
+                } else {
+                    stockVsFunds['stock'] = stockVsFunds['stock'].plus(delta)
+                }
+        
                 outputLines.push(`(Unrealized) ${instrument}, PnL: ${delta} (buy avg ${avgBuyPrice}, price now ${marketPrice.lastPrice}, holding ${holdingQuantity})`)
                 positionPnL = positionPnL.plus(delta);
             }
@@ -176,17 +211,26 @@ function adjustCurrency({currency, value}: {value: BigNumber; currency: string})
         output.push([outputLines, positionPnL])
     }
 
-    for(const i of output.sort((a, b) => a[1].isLessThan(b[1]) ? -1 : 1)) {
-        for(const j of i[0]){
+    for (const i of output.sort((a, b) => a[1].isLessThan(b[1]) ? -1 : 1)) {
+        for (const j of i[0]) {
             colorPrint(j, i[1])
         }
     }
 
+    function format(name: string, value: BigNumber){
+        console.log({[name] : value.toFormat(0)})
+    }
+
     console.log('');
-    console.log(`Divides profits ${dividends.toString()}`);
-    console.log(`Trading profits ${sum.toString()}`);
-    console.log(`Unrealized profits ${unrealized}`)
+    console.log('');
+    console.log('Your stock picks vs the funds PnL');
+    format('Stock PnL ', stockVsFunds['stock'])
+    format('Funds PnL ', stockVsFunds['funds'])
+    console.log('');
+    format('Divides PnL', dividends)
+    format('Trading PnL', sum)
+    format('Unrealized PnL', unrealized)
     const total = dividends.plus(sum).plus(unrealized);
-    console.log(`total (including unrealized) profits ${total}`)
+    format('Total PnL (including unrealized PnL)', total);
 })();
 

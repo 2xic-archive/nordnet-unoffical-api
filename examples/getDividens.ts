@@ -15,7 +15,6 @@ import container from "./container";
       console.log('');
     }
     lastMonth = currentMonth;
-
-    console.log(`${item.instrument} has a payout of ${item.payout} ${item.currency} on ${item.date.format('YYYY-MM-DD')}`)
+    console.log(`${item.instrument} has a payout of ${item.payout} ${item.currency} on ${item.date.format('YYYY-MM-DD')} (ex-date  ${item.exDate.format('YYYY-MM-DD')} )`)
   });
 })();

@@ -86,6 +86,7 @@ export interface SimpleEquityResponse {
 export interface SimpleDividendsResponse {
   instrument: string;
   payout: BigNumber;
+  exDate: Dayjs;
   date: Dayjs;
   currency: string;
 }
