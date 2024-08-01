@@ -33,47 +33,22 @@ export class HttpAuthenticate {
     const password = process.env.NORDNET_PASSWORD;
 
     if (!username || !password) {
-      throw new Error('Missing username / password enviroment variables');
+      throw new Error('Missing username / password environment variables');
     }
 
     await this.getBaseCookie({ fetchSession });
-
-    const ntagRequest = await fetchSession.fetch('https://www.nordnet.no/api/2/login', {
-      headers: this.httpHeaderConstructor.getHeaders({
-        headers: {
-          'client-id': 'NEXT',
-        },
-      }),
-    });
-
-    await fetchSession.fetch('https://classic.nordnet.no/api/2/login/anonymous', {
-      method: 'post',
-      headers: this.httpHeaderConstructor.getHeaders({
-        headers: {},
-      }),
-    });
-
-    if (!ntagRequest) {
-      throw new Error('Empty response');
-    }
-
-    let ntag = ntagRequest.headers.get('ntag');
 
     const request = {
       username,
       password,
     };
 
-    if (!ntag) {
-      throw new Error('Missing ntag');
-    }
-
     const response = await fetchSession.fetch('https://www.nordnet.no/api/2/authentication/basic/login', {
       method: 'post',
       body: JSON.stringify(request),
       headers: this.httpHeaderConstructor.getHeaders({
         headers: {
-          ntag,
+          ntag: 'NO_NTAG_RECEIVED_YET',
           Accept: 'application/json',
           'content-type': 'application/json',
           'sub-client-id': 'NEXT',
@@ -86,7 +61,7 @@ export class HttpAuthenticate {
       throw new Error('Empty response');
     }
 
-    ntag = response.headers.get('ntag');
+    const ntag = response.headers.get('ntag');
     if (!ntag) {
       throw new Error('Missing updated ntag');
     }
