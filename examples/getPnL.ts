@@ -1,5 +1,5 @@
 import BigNumber from 'bignumber.js';
-import dayjs from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
@@ -101,6 +101,7 @@ function adjustCurrency({ currency, value }: { value: BigNumber; currency: strin
     const instruments: Partial<Record<string, {
         quantity: BigNumber;
         price: BigNumber;
+        date?: Dayjs
     }[]>> = {};
     const instrumentInfo: Partial<Record<string, {
         instrumentGroupType?: string;
@@ -123,6 +124,7 @@ function adjustCurrency({ currency, value }: { value: BigNumber; currency: strin
             instruments[item.instrument?.symbol]?.push({
                 price: instrumentPriceAdjusted,
                 quantity: item.quantity,
+                date: item.settled,
             });
             instrumentInfo[item.instrument.symbol] = {
                 instrumentGroupType: item.instrument.groupType,
@@ -162,6 +164,7 @@ function adjustCurrency({ currency, value }: { value: BigNumber; currency: strin
         dividends: dividends.toString(),
     })
     let sum = new BigNumber(0);
+    let lost = new BigNumber(0);
     let unrealized = new BigNumber(0);
     let stockVsFunds: Record<
         'stock' | 'funds',
@@ -170,6 +173,9 @@ function adjustCurrency({ currency, value }: { value: BigNumber; currency: strin
         'stock': new BigNumber(0),
         'funds': new BigNumber(0),
     }
+    let stockVsFundsYearly: Partial<Record<string, Record<'stock' | 'funds',BigNumber>>> = {    }
+    let bestStockTrade: Record<string, BigNumber> = {}
+
     const output: Array<[string[], BigNumber]> = [];
     for (const [instrument, PnL] of Object.entries(instrumentsPnL)) {
         const holdingQuantity = instruments[instrument]?.map((item) => item.quantity)?.reduce((a, b) => a?.plus(b), new BigNumber(0));
@@ -185,6 +191,11 @@ function adjustCurrency({ currency, value }: { value: BigNumber; currency: strin
         } else {
             stockVsFunds['stock'] = stockVsFunds['stock'].plus(PnL)
         }
+
+        if (PnL.isLessThan(0)){
+            lost = lost.plus(PnL)
+        }
+        
         if (holdingQuantity?.isGreaterThan(0) && instrument2InstrumentId[instrument]) {
             const marketPrice = await getMarketPrice({
                 instrumentId: instrument2InstrumentId[instrument]
@@ -203,7 +214,30 @@ function adjustCurrency({ currency, value }: { value: BigNumber; currency: strin
                 } else {
                     stockVsFunds['stock'] = stockVsFunds['stock'].plus(delta)
                 }
-        
+                // TODO: Make this cleaner (?)
+                const date = instrumentTransactions[0].date?.format('YYYY');
+                if (date){
+                    if (!stockVsFundsYearly[date]) {
+                        stockVsFundsYearly[date] = {
+                            'stock': new BigNumber(0),
+                            'funds': new BigNumber(0),                
+                        }
+                    }
+                    const reference = stockVsFundsYearly[date];
+                    if (reference){
+                        if (instrumentInfo[instrument]?.instrumentGroupType === 'FND') {
+                            reference['funds'] = reference['funds'].plus(delta)
+                        } else {
+                            reference['stock'] = reference['stock'].plus(delta)
+                        }    
+                    } 
+                }
+
+                if (!bestStockTrade[instrument]){
+                    bestStockTrade[instrument] = new BigNumber(0)
+                }
+                bestStockTrade[instrument] = bestStockTrade[instrument].plus(delta);
+                
                 outputLines.push(`(Unrealized) ${instrument}, PnL: ${delta} (buy avg ${avgBuyPrice}, price now ${marketPrice.lastPrice}, holding ${holdingQuantity})`)
                 positionPnL = positionPnL.plus(delta);
             }
@@ -217,20 +251,42 @@ function adjustCurrency({ currency, value }: { value: BigNumber; currency: strin
         }
     }
 
-    function format(name: string, value: BigNumber){
+    function format(name: string, value: BigNumber, {indent}:{indent:boolean}={indent: false}){
+        if (indent){
+            console.group();
+        }
         console.log({[name] : value.toFormat(0)})
+        if (indent){
+            console.groupEnd();
+        }
+    }
+
+    for(const key of Object.keys(stockVsFundsYearly)){
+        const data = stockVsFundsYearly[key];
+        if (data){
+            console.log(key);
+            format('Stock PnL ', data['stock'], {indent: true})
+            format('Funds PnL ', data['funds'], {indent: true})    
+        }
+    }
+
+    console.log("Sorted balances");
+    for(const [key, value] of [...Object.entries(bestStockTrade)].sort(([_, b], [__, c]) => b.isLessThan(c) ? -1: 1)) {
+        format(key, value, {indent: true})
     }
 
     console.log('');
     console.log('');
     console.log('Your stock picks vs the funds PnL');
-    format('Stock PnL ', stockVsFunds['stock'])
-    format('Funds PnL ', stockVsFunds['funds'])
+    format('Total amount lost', lost, {indent: true})
+    format('Stock PnL ', stockVsFunds['stock'], {indent: true})
+    format('Funds PnL ', stockVsFunds['funds'], {indent: true})
     console.log('');
-    format('Divides PnL', dividends)
-    format('Trading PnL', sum)
-    format('Unrealized PnL', unrealized)
+    format('Divides PnL', dividends, {indent: true})
+    format('Trading PnL', sum, {indent: true})
+    format('Unrealized PnL', unrealized, {indent: true})
     const total = dividends.plus(sum).plus(unrealized);
-    format('Total PnL (including unrealized PnL)', total);
+    format('Total PnL (including unrealized PnL)', total, {indent: true});
+
 })();
 
