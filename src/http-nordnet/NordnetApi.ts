@@ -145,4 +145,5 @@ export interface InstrumentFundInformation {
   price: {
     lastPrice: BigNumber;
   };
+  feeRate?: BigNumber
 }

@@ -233,6 +233,9 @@ export class HttpNordnetApi implements NordnetApi {
         },
       };
     } else {
+      const feeRate = await this.fundList({
+        instrumentId: instrument.instrument_info.instrument_id.toString()
+      });
       return {
         id: instrument.instrument_info.instrument_id.toString(),
         name: instrument.instrument_info.long_name,
@@ -244,8 +247,39 @@ export class HttpNordnetApi implements NordnetApi {
         price: {
           lastPrice: new BigNumber(instrument.price_info.last.price),
         },
+        feeRate,
       };
     }
+  }
+
+  private async fundList({instrumentId}: {instrumentId: string}){
+    const ntag = await this.httpAuthentication.getAuth({
+      fetchSession: this.fetchSession,
+    });
+    const response = await this.fetchSession.fetch<{
+      results?: Array<{
+        fund_info: {
+          fund_calculated_fee: string
+        }
+      }>;
+    }>(`https://www.nordnet.no/api/2/instrument_search/query/fundlist?apply_filters=instrument_id=${instrumentId}`, {
+      headers: this.httpHeaderConstructor.getHeaders({
+        headers: {
+          ntag: ntag,
+          'client-id': 'NEXT',
+          Accept: 'application/json',
+        },
+      }),
+    });
+    if (!response) {
+      throw new Error('Missing response');
+    }
+
+    if (!response.body.results?.length){
+      throw new Error('Fund not found.');
+    }
+
+    return new BigNumber(response.body.results[0].fund_info.fund_calculated_fee)
   }
 
   public async getAccountBalance({ accountId }: { accountId: string }): Promise<Balance[]> {
